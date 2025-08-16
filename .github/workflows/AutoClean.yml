@@ -1,7 +1,7 @@
 name: AutoClean
 
 on:
-  # 自动清理：每天早上 4 点
+  # 自动清理: 每天早上 4 点
   schedule:
     - cron: 0 20 * * *
   # 手动清理
@@ -20,7 +20,7 @@ jobs:
           delete_tags: true
           delete_releases: true
           releases_keep_latest: 7
-          releases_keep_keyword: ''
+          releases_keep_keyword: 'ZeroWrt-Firmware-IPQ60XX-WiFi_NO-main-25.08.15-21.37.18'
           delete_workflows: true
           workflows_keep_day: 7
           workflows_keep_keyword: ''

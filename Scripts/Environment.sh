@@ -9,24 +9,24 @@ GREEN_COLOR="\033[32m"
 RED_COLOR="\033[31m"
 YELLOW_COLOR="\033[33m"
 
-function __error_msg() {
+function __errorMsg() {
 	echo -e "${RED_COLOR}[ERROR]${DEFAULT_COLOR} $*"
 }
 
-function __info_msg() {
+function __infoMsg() {
 	echo -e "${BLUE_COLOR}[INFO]${DEFAULT_COLOR} $*"
 }
 
-function __success_msg() {
+function __successMsg() {
 	echo -e "${GREEN_COLOR}[SUCCESS]${DEFAULT_COLOR} $*"
 }
 
-function __warning_msg() {
+function __warningMsg() {
 	echo -e "${YELLOW_COLOR}[WARNING]${DEFAULT_COLOR} $*"
 }
 
-function check_system() {
-	__info_msg "Checking system info..."
+function checkSystem() {
+	__infoMsg "Checking system info..."
 
 	VERSION_CODENAME="$(source /etc/os-release; echo "$VERSION_CODENAME")"
 
@@ -71,26 +71,26 @@ function check_system() {
 		VERSION_PACKAGE="lib32gcc-s1"
 		;;
 	*)
-		__error_msg "Unsupported OS, use Ubuntu 20.04 instead."
+		__errorMsg "Unsupported OS, use Ubuntu 20.04 instead."
 		exit 1
 		;;
 	esac
 
-	[ "$(uname -m)" == "x86_64" ] || { __error_msg "Unsupported architecture, use AMD64 instead." && exit 1; }
+	[ "$(uname -m)" == "x86_64" ] || { __errorMsg "Unsupported architecture, use AMD64 instead." && exit 1; }
 
-	[ "$(whoami)" == "root" ] || { __error_msg "You must run this script as root." && exit 1; }
+	[ "$(whoami)" == "root" ] || { __errorMsg "You must run this script as root." && exit 1; }
 }
 
-function check_network() {
-	__info_msg "Checking network..."
+function checkNetwork() {
+	__infoMsg "Checking network..."
 
 	curl -s "myip.ipip.net" | grep -qo "中国" && CHN_NET=1
-	curl --connect-timeout 10 "baidu.com" > "/dev/null" 2>&1 || { __warning_msg "Your network is not suitable for compiling OpenWrt!"; }
-	curl --connect-timeout 10 "google.com" > "/dev/null" 2>&1 || { __warning_msg "Your network is not suitable for compiling OpenWrt!"; }
+	curl --connect-timeout 10 "baidu.com" > "/dev/null" 2>&1 || { __warningMsg "Your network is not suitable for compiling OpenWrt!"; }
+	curl --connect-timeout 10 "google.com" > "/dev/null" 2>&1 || { __warningMsg "Your network is not suitable for compiling OpenWrt!"; }
 }
 
-function update_apt_source() {
-	__info_msg "Updating apt source lists..."
+function updateAptSource() {
+	__infoMsg "Updating apt source lists..."
 	set -x
 
 	apt update -y
@@ -186,8 +186,8 @@ function update_apt_source() {
 	set +x
 }
 
-function install_dependencies() {
-	__info_msg "Installing dependencies..."
+function installDependencies() {
+	__infoMsg "Installing dependencies..."
 	set -x
 
 	apt full-upgrade -y $BPO_FLAG
@@ -251,7 +251,7 @@ function install_dependencies() {
 	if TMP_DIR="$(mktemp -d)"; then
 		pushd "$TMP_DIR"
 	else
-		__error_msg "Failed to create a tmp directory."
+		__errorMsg "Failed to create a tmp directory."
 		exit 1
 	fi
 
@@ -294,14 +294,14 @@ function install_dependencies() {
 	rm -rf "$TMP_DIR"
 
 	set +x
-	__success_msg "All dependencies have been installed."
+	__successMsg "All dependencies have been installed."
 }
 
 function main() {
-	check_system
-	check_network
-	update_apt_source
-	install_dependencies
+	checkSystem
+	checkNetwork
+	updateAptSource
+	installDependencies
 }
 
 main

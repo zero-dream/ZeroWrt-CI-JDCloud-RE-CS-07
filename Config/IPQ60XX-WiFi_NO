@@ -1,13 +1,13 @@
-#设备平台
+# 设备平台
 CONFIG_TARGET_qualcommax=y
 CONFIG_TARGET_qualcommax_ipq60xx=y
 CONFIG_TARGET_MULTI_PROFILE=y
 CONFIG_TARGET_PER_DEVICE_ROOTFS=y
 
-#设备列表
+# 设备列表
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_jdcloud_re-cs-07=y
 
-#内核配置
+# 内核配置
 CONFIG_KERNEL_ARM_PMU=y
 CONFIG_KERNEL_CFQ_GROUP_IOSCHED=y
 CONFIG_KERNEL_CGROUP_DEVICE=y
@@ -22,7 +22,7 @@ CONFIG_KERNEL_NET_CLS_CGROUP=y
 CONFIG_KERNEL_PERF_EVENTS=y
 # CONFIG_KERNEL_PREEMPT_RCU is not set
 
-#NSS配置
+# NSS 配置
 CONFIG_FEED_nss_packages=n
 CONFIG_FEED_sqm_scripts_nss=n
 CONFIG_IPQ_MEM_PROFILE_1024=n
@@ -30,7 +30,7 @@ CONFIG_IPQ_MEM_PROFILE_512=y
 CONFIG_ATH11K_MEM_PROFILE_1G=n
 CONFIG_ATH11K_MEM_PROFILE_512M=y
 
-#去除WIFI
+# 去除 WIFI
 # CONFIG_DRIVER_11AC_SUPPORT is not set
 # CONFIG_DRIVER_11AX_SUPPORT is not set
 # CONFIG_ATH11K_NSS_SUPPORT is not set
@@ -50,7 +50,7 @@ CONFIG_ATH11K_MEM_PROFILE_512M=y
 # CONFIG_PACKAGE_ath11k-firmware-ipq6018 is not set
 # CONFIG_PACKAGE_ath11k-firmware-qcn9074 is not set
 
-#ipq-wifi
+# ipq-wifi
 # CONFIG_PACKAGE_ipq-wifi-cmiot_ax18 is not set
 # CONFIG_PACKAGE_ipq-wifi-jdcloud_ax1800-pro is not set
 # CONFIG_PACKAGE_ipq-wifi-jdcloud_ax6600 is not set
