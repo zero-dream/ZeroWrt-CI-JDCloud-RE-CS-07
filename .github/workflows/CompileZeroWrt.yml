@@ -1,0 +1,71 @@
+# CI项目
+name: CompileZeroWrt
+
+# CI计划
+on:
+  # 自动编译：当 AutoClean 运行完成后
+  workflow_run:
+    workflows: ["AutoClean"]
+    types:
+      - completed
+  # 手动编译
+  workflow_dispatch:
+    inputs:
+      MODE:
+        description: '模式: FIRMWARE:编译固件; PACKAGE:编译软件包; CONFIG:仅生成配置;'
+        required: true
+        default: 'FIRMWARE'
+        type: choice
+        options:
+          - FIRMWARE
+          - PACKAGE
+          - CONFIG
+      PACKAGE:
+        description: '调整软件包: 使用 \n 分隔'
+        required: false
+        type: string
+
+# CI权限
+permissions: write-all
+
+# CI任务
+jobs:
+  config:
+    name: ${{matrix.CONFIG}}
+    strategy:
+      fail-fast: false
+
+      matrix:
+        CONFIG: [IPQ60XX-WiFi_NO]
+        SOURCE: [VIKINGYFY/immortalwrt]
+        BRANCH: [main]
+
+    # 调用公用编译核心
+    uses: ./.github/workflows/CoreOpenwrt.yml
+    with:
+      # 选择模式
+      WRT_MODE: ${{inputs.MODE}}
+      # 插件调整
+      WRT_PACKAGE: ${{inputs.PACKAGE}}
+      # 编译配置
+      WRT_CONFIG: ${{matrix.CONFIG}}
+      # 源码名称
+      WRT_SOURCE: ${{matrix.SOURCE}}
+      # 源码分支
+      WRT_BRANCH: ${{matrix.BRANCH}}
+      # 源码链接
+      WRT_REPO: https://github.com/${{matrix.SOURCE}}.git
+      # CI_NAME
+      CI_NAME: ${{github.workflow}}
+      # 默认主题
+      WRT_THEME: argon
+      # 默认主机名
+      WRT_NAME: ZeroDream
+      # 默认WIFI名称
+      WRT_SSID: ZeroDream
+      # 默认WIFI密码
+      WRT_WORD: 12345678
+      # 默认地址
+      WRT_IP: 192.168.10.1
+      # 默认密码，仅供提示，修改无效
+      WRT_PW: 无

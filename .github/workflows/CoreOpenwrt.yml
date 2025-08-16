@@ -33,10 +33,10 @@ on:
       WRT_SOURCE:
         required: false
         type: string
-      WRT_PACKAGE:
-        required: false
+      WRT_MODE:
+        required: true
         type: string
-      WRT_TEST:
+      WRT_PACKAGE:
         required: false
         type: string
       CI_NAME:
@@ -58,7 +58,7 @@ env:
   WRT_REPO: ${{inputs.WRT_REPO}}
   WRT_BRANCH: ${{inputs.WRT_BRANCH}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
-  WRT_TEST: ${{inputs.WRT_TEST}}
+  WRT_MODE: ${{inputs.WRT_MODE}}
   WRT_DIR: 'wrt'
   CI_NAME: ${{inputs.CI_NAME}}
   WRT_ARCH: ${{inputs.WRT_ARCH}}
@@ -87,10 +87,10 @@ jobs:
           remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/share/chromium /usr/local/share/powershell"
           testing: false
 
-      - name: Checkout Projects
+      - name: Checkout Project
         uses: actions/checkout@main
 
-      - name: Initialization Environment
+      - name: Initialize Environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -105,7 +105,7 @@ jobs:
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
-      - name: Initialization Values
+      - name: Initialize Value
         run: |
           echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
           echo "WRT_MARK=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)" >> $GITHUB_ENV
@@ -120,22 +120,31 @@ jobs:
           }
           echo "$WRT_REPO/$WRT_BRANCH" > "$GITHUB_WORKSPACE/repo_flag"
 
+      - name: Initialize Project
+        run: |
+          uploadPath="$GITHUB_WORKSPACE/upload"
+          echo "WRT_UPLOAD_PATH=$uploadPath" >> $GITHUB_ENV
+          mkdir -p "$uploadPath"
+          tempPath="$GITHUB_WORKSPACE/temp"
+          echo "WRT_TEMP_PATH=$tempPath" >> $GITHUB_ENV
+          mkdir -p "$tempPath"
+
       - name: Clone Code
         run: |
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO "$GITHUB_WORKSPACE/$WRT_DIR/"
           cd "$GITHUB_WORKSPACE/$WRT_DIR/" && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-      - name: Copy Files
+      - name: Copy File
         run: |
-          rm "$GITHUB_WORKSPACE/Openwrt/files/.gitkeep"
-          rm "$GITHUB_WORKSPACE/Openwrt/package/.gitkeep"
+          rm -f "$GITHUB_WORKSPACE/Openwrt/files/.gitkeep"
+          rm -f "$GITHUB_WORKSPACE/Openwrt/package/.gitkeep"
           cp -r "$GITHUB_WORKSPACE"/Openwrt/* "$GITHUB_WORKSPACE/$WRT_DIR/"
 
-      - name: Check Scripts
+      - name: Check Script
         run: |
           find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
-      - name: Cache Dependencies
+      - name: Cache Dependency
         uses: actions/cache@v4
         with:
           path: |
@@ -145,7 +154,7 @@ jobs:
           restore-keys: |
             ${{ env.WRT_ARCH }}-${{ hashFiles('**/repo_flag') }}-
 
-      - name: Refresh the cache
+      - name: Refresh Cache
         run: |
           if [ -d "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" ]; then
             find "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r dir; do
@@ -159,31 +168,30 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Custom Packages
+      - name: Custom Package
         run: |
           cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
-          $GITHUB_WORKSPACE/Scripts/Packages.sh
-          $GITHUB_WORKSPACE/Scripts/Handles.sh
+          $GITHUB_WORKSPACE/Scripts/Package.sh
+          $GITHUB_WORKSPACE/Scripts/Handle.sh
 
-      - name: Custom Settings
+      - name: Custom Setting
         run: |
           source $GITHUB_WORKSPACE/Scripts/Function.sh
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          generate_config && cat .config
+          generateConfig && cat .config
           $GITHUB_WORKSPACE/Scripts/Settings.sh
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
-      - name: Download Packages
-        if: env.WRT_TEST != 'true'
+      - name: Download Package
+        if: env.WRT_MODE == 'FIRMWARE' || env.WRT_MODE == 'PACKAGE'
         run: |
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
           make download -j$(nproc)
 
       - name: Compile Firmware
-        if: env.WRT_TEST != 'true'
         run: |
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          make -j$(nproc) || make -j1 V=s
+          make -j$(nproc) || make -j$(nproc) V=s
 
       - name: Delete Old Cache
         run: |
@@ -192,50 +200,51 @@ jobs:
             gh cache delete "$key"
           done
           # 输出缓存状态
-          echo "========cache status========"
+          echo "========== cache status =========="
           echo "ccache: $(du -sh $GITHUB_WORKSPACE/$WRT_DIR/.ccache | cut -f 1)"
           echo "staging: $(du -sh $GITHUB_WORKSPACE/$WRT_DIR/staging_dir | cut -f 1)"
 
       - name: Machine Information
         run: |
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          echo "======================="
+          echo "===================="
           lscpu | grep -E "name|Core|Thread"
-          echo "======================="
+          echo "===================="
           df -h
-          echo "======================="
+          echo "===================="
           du -h --max-depth=1
-          echo "======================="
+          echo "===================="
 
-      - name: Package Firmware
+      - name: Release File
         run: |
-          uploadPath="$GITHUB_WORKSPACE/upload"
-          mkdir -p "$uploadPath"
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          cp -f ./.config "${uploadPath}/Config-${WRT_CONFIG}-${WRT_VER}-${WRT_DATE}"
-          if [[ $WRT_TEST != 'true' ]]; then
+          cp -f ./.config "${WRT_UPLOAD_PATH}/Config-${WRT_CONFIG}-${WRT_VER}-${WRT_DATE}"
+          if [[ "$WRT_MODE" == 'FIRMWARE' || "$WRT_MODE" == 'PACKAGE' ]]; then
+            tar -czvf "${WRT_UPLOAD_PATH}/OpenwrtBin-${WRT_CONFIG}-${WRT_VER}-${WRT_DATE}.tar.gz" ./bin/
+          fi
+          if [[ "$WRT_MODE" == 'FIRMWARE' ]]; then
             echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
             echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
-            tar -czvf "${uploadPath}/OpenwrtBin-${WRT_CONFIG}-${WRT_VER}-${WRT_DATE}.tar.gz" ./bin/
+            
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
             for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
               EXT=$(basename $FILE | cut -d '.' -f 2-)
               NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
               NEW_FILE="$WRT_VER"-"$NAME"-"$WRT_DATE"."$EXT"
-              mv -f $FILE "${uploadPath}/$NEW_FILE"
+              mv -f $FILE "${WRT_UPLOAD_PATH}/$NEW_FILE"
             done
-            find ./bin/targets/ -type f -exec mv -f {} "${uploadPath}/" \;
+            find ./bin/targets/ -type f -exec mv -f {} "${WRT_UPLOAD_PATH}/" \;
             make clean -j$(nproc)
           fi
 
-      - name: Release Firmware
+      - name: Upload Firmware Release
+        if: env.WRT_MODE == 'FIRMWARE'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{env.CI_NAME}}-${{env.WRT_CONFIG}}-${{env.WRT_DATE}}
-          files: ${{ github.workspace }}/upload/*.*
+          tag_name: ZeroWrt-FIRMWARE-${{env.WRT_CONFIG}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          files: ${{ env.WRT_UPLOAD_PATH }}/*.*
           body: |
-            JDCloud-RE-CS-07
-            由 ZeroDream 维护
+            ZeroWrt 固件，由 ZeroDream 基于 VIKINGYFY 的 ImmortalWrt 源码进行开发
 
             源码：${{env.WRT_REPO}}
             分支：${{env.WRT_BRANCH}}
@@ -246,6 +255,28 @@ jobs:
 
             登录地址：${{env.WRT_IP}}
             登录密码：${{env.WRT_PW}}
+
+            WIFI名称：${{env.WRT_SSID}}
+            WIFI密码：${{env.WRT_WORD}}
+
+            内核版本：${{env.WRT_KVER}}
+            插件列表：${{env.WRT_LIST}}
+
+      - name: Upload Package Release 
+        if: env.WRT_MODE == 'PACKAGE'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ZeroWrt-Package-${{env.WRT_CONFIG}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          files: ${{ env.WRT_UPLOAD_PATH }}/*.*
+          body: |
+            ZeroWrt 固件，由 ZeroDream 基于 VIKINGYFY 的 ImmortalWrt 源码进行开发
+
+            源码：${{env.WRT_REPO}}
+            分支：${{env.WRT_BRANCH}}
+            提交：${{env.WRT_HASH}}
+
+            配置：${{env.WRT_CONFIG}}
+            平台：${{env.WRT_TARGET}}
 
             内核版本：${{env.WRT_KVER}}
             插件列表：${{env.WRT_LIST}}

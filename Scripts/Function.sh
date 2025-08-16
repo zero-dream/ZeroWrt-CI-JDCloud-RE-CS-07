@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function cat_kernel_config() {
+function catKernelConfig() {
   if [ -f $1 ]; then
     cat >> $1 <<EOF
 CONFIG_BPF=y
@@ -28,13 +28,13 @@ CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=y
 # CONFIG_TRANSPARENT_HUGEPAGE_MADVISE is not set
 # CONFIG_TRANSPARENT_HUGEPAGE_NEVER is not set
 EOF
-    echo "cat_kernel_config to $1 done"
+    echo "catKernelConfig to $1 done"
   fi
 }
 
-function cat_ebpf_config() {
+function catEbpfConfig() {
   cat >> $1 <<EOF
-#eBPF
+# EBPF
 CONFIG_DEVEL=y
 CONFIG_KERNEL_DEBUG_INFO=y
 CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
@@ -48,9 +48,9 @@ CONFIG_PACKAGE_kmod-xdp-sockets-diag=y
 EOF
 }
 
-function cat_usb_net() {
+function catUsbNet() {
   cat >> $1 <<EOF
-#USB CPE Driver
+# USB CPE Driver
 CONFIG_PACKAGE_kmod-usb-net=y
 CONFIG_PACKAGE_kmod-usb-net-cdc-eem=y
 CONFIG_PACKAGE_kmod-usb-net-cdc-ether=y
@@ -63,7 +63,7 @@ CONFIG_PACKAGE_kmod-usb-net-rndis=y
 CONFIG_PACKAGE_kmod-usb-net-rtl8150=y
 CONFIG_PACKAGE_kmod-usb-net-rtl8152=y
 EOF
-#6.12内核不包含以下驱动
+# 6.12 内核不包含以下驱动
 if echo "$CI_NAME" | grep -v "6.12" > /dev/null; then
   cat >> $1 <<EOF
 CONFIG_PACKAGE_kmod-usb-net-qmi-wwan=y
@@ -73,9 +73,9 @@ EOF
 fi
 }
 
-function set_nss_driver() {
+function setNssDriver() {
   cat >> $1 <<EOF
-#NSS驱动相关
+# NSS 驱动相关
 CONFIG_NSS_FIRMWARE_VERSION_11_4=n
 # CONFIG_NSS_FIRMWARE_VERSION_12_5 is not set
 CONFIG_NSS_FIRMWARE_VERSION_12_2=y
@@ -84,7 +84,7 @@ CONFIG_PACKAGE_kmod-qca-nss-drv=y
 CONFIG_PACKAGE_kmod-qca-nss-drv-bridge-mgr=y
 CONFIG_PACKAGE_kmod-qca-nss-drv-vlan=y
 CONFIG_PACKAGE_kmod-qca-nss-drv-igs=y
-#CONFIG_PACKAGE_kmod-qca-nss-drv-map-t=y
+# CONFIG_PACKAGE_kmod-qca-nss-drv-map-t=y
 CONFIG_PACKAGE_kmod-qca-nss-drv-pppoe=y
 CONFIG_PACKAGE_kmod-qca-nss-drv-pptp=y
 CONFIG_PACKAGE_kmod-qca-nss-drv-qdisc=y
@@ -95,54 +95,58 @@ CONFIG_PACKAGE_kmod-qca-nss-drv-lag-mgr=y
 EOF
 }
 
-function kernel_version() {
+function kernelVersion() {
   echo $(sed -n 's/^KERNEL_PATCHVER:=\(.*\)/\1/p' target/linux/qualcommax/Makefile)
 }
 
-function remove_wifi() {
+function removeWifi() {
   local target=$1
-  #去除依赖
+  # 去除依赖
   sed -i 's/\(ath11k-firmware-[^ ]*\|ipq-wifi-[^ ]*\|kmod-ath11k-[^ ]*\)//g' ./target/linux/qualcommax/Makefile
   sed -i 's/\(ath11k-firmware-[^ ]*\|ipq-wifi-[^ ]*\|kmod-ath11k-[^ ]*\)//g' ./target/linux/qualcommax/${target}/target.mk
   sed -i 's/\(ath11k-firmware-[^ ]*\|ipq-wifi-[^ ]*\|kmod-ath11k-[^ ]*\)//g' ./target/linux/qualcommax/image/${target}.mk
   sed -i 's/\(ath10k-firmware-[^ ]*\|kmod-ath10k [^ ]*\|kmod-ath10k-[^ ]*\)//g' ./target/linux/qualcommax/image/${target}.mk
-  #删除无线组件
+  # 删除无线组件
   rm -rf package/network/services/hostapd
   rm -rf package/firmware/ipq-wifi
 }
 
-function set_kernel_size() {
-  #修改jdc的内核大小为12M
+function setKernelSize() {
+  # 修改 JDCloud 的内核大小为 12M
   image_file='./target/linux/qualcommax/image/ipq60xx.mk'
   sed -i "/^define Device\/jdcloud_re-cs-07/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" $image_file
 }
 
-#开启内存回收补丁
-function enable_skb_recycler() {
+# 开启内存回收补丁
+function enableSkbRecycler() {
   cat >> $1 <<EOF
 CONFIG_KERNEL_SKB_RECYCLER=y
 CONFIG_KERNEL_SKB_RECYCLER_MULTI_CPU=y
 EOF
 }
 
-function generate_config() {
-  config_file=".config"
-  #如配置文件已存在
-  cat $GITHUB_WORKSPACE/Config/${WRT_CONFIG} $GITHUB_WORKSPACE/Config/PackageConfig  > $config_file
-  #删除wifi依赖
+function generateConfig() {
+  configFile=".config"
+  # 如配置文件已存在
+  cat $GITHUB_WORKSPACE/Config/${WRT_CONFIG} > $configFile
+  cat $GITHUB_WORKSPACE/Config/CompileFirmware >> $configFile
+  if [[ "$WRT_MODE" == 'PACKAGE' ]]; then
+    cat $GITHUB_WORKSPACE/Config/CompilePackage >> $configFile
+  fi
+  # 删除 WiFi 依赖
   local target=$(echo $WRT_ARCH | cut -d'_' -f2)
-  if [[ "$WRT_CONFIG" == *"NOWIFI"* ]]; then
-    remove_wifi $target
+  if [[ "$WRT_CONFIG" == *"WiFi_NO"* ]]; then
+    removeWifi $target
   fi
-  #ipk仓库
+  # IPK 仓库
   if [[ "${GITHUB_REPOSITORY,,}" == *"openwrt-ci-ipk"* ]]; then
-    echo "CONFIG_USE_APK=n" >> $config_file
+    echo "CONFIG_USE_APK=n" >> $configFile
   fi
-  set_nss_driver $config_file
-  #增加ebpf
-  cat_ebpf_config $config_file
-  enable_skb_recycler $config_file
-  set_kernel_size
-  #增加内核选项
-  cat_kernel_config "target/linux/qualcommax/${target}/config-default"
+  setNssDriver $configFile
+  # 增加 EBPF
+  catEbpfConfig $configFile
+  enableSkbRecycler $configFile
+  setKernelSize
+  # 增加内核选项
+  catKernelConfig "target/linux/qualcommax/${target}/config-default"
 }

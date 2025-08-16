@@ -1,7 +1,7 @@
 name: AutoClean
 
 on:
-  # 自动清理：每天早上 4 点
+  # 自动清理: 每天早上 4 点
   schedule:
     - cron: 0 20 * * *
   # 手动清理

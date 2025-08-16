@@ -1,0 +1,18 @@
+# 核心软件
+CONFIG_PACKAGE_luci-app-ttyd=m
+CONFIG_PACKAGE_luci-app-cpufreq=m
+CONFIG_PACKAGE_luci-app-partexp=m
+CONFIG_PACKAGE_luci-app-autoreboot=m
+CONFIG_PACKAGE_luci-app-wolplus=m
+
+# 常用软件
+CONFIG_PACKAGE_luci-app-samba4=m
+CONFIG_PACKAGE_luci-app-zerotier=m
+
+# 代理软件
+CONFIG_PACKAGE_luci-app-dae=m
+CONFIG_PACKAGE_luci-app-daed=m
+CONFIG_PACKAGE_luci-app-homeproxy=m
+
+# 其他软件
+CONFIG_PACKAGE_luci-app-upnp=m
