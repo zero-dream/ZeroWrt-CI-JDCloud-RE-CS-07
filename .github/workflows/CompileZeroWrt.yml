@@ -1,0 +1,78 @@
+# CI 项目
+name: CompileZeroWrt
+
+# CI 权限
+permissions: write-all
+
+# CI 计划
+on:
+  # 自动编译: 当 AutoClean 运行完成后
+  workflow_run:
+    workflows: ["AutoClean"]
+    types:
+      - completed
+  # 手动编译
+  workflow_dispatch:
+    inputs:
+      MODE:
+        description: '模式: FIRMWARE:编译固件; PACKAGE:编译软件包;'
+        required: true
+        type: choice
+        default: 'FIRMWARE'
+        options:
+          - FIRMWARE
+          - PACKAGE
+      ONLY_CONFIG:
+        description: '是否仅生成配置'
+        required: true
+        type: boolean
+        default: false
+      PACKAGE:
+        description: '调整软件包: 使用 \n 分隔'
+        required: false
+        type: string
+        default: ''
+
+# CI 任务
+jobs:
+  config:
+    name: ${{matrix.CONFIG}}
+    strategy:
+      fail-fast: false
+      # 矩阵
+      matrix:
+        CONFIG: [IPQ60XX-WiFi_NO]
+        SOURCE: [VIKINGYFY/immortalwrt]
+        BRANCH: [main]
+
+    # 调用公用编译核心
+    uses: ./.github/workflows/ZeroWrtCore.yml
+    with:
+      # 选择模式
+      WRT_MODE: ${{inputs.MODE || 'FIRMWARE'}} # 为自动编译设置默认值
+      # 是否仅生成配置
+      WRT_ONLY_CONFIG: ${{inputs.ONLY_CONFIG || false}} # 为自动编译设置默认值
+      # 插件调整
+      WRT_PACKAGE: ${{inputs.PACKAGE}}
+      # 编译配置
+      WRT_CONFIG: ${{matrix.CONFIG}}
+      # 源码名称
+      WRT_SOURCE: ${{matrix.SOURCE}}
+      # 源码分支
+      WRT_BRANCH: ${{matrix.BRANCH}}
+      # 源码链接
+      WRT_REPO: https://github.com/${{matrix.SOURCE}}.git
+      # CI_NAME
+      CI_NAME: ${{github.workflow}}
+      # 默认主题
+      WRT_THEME: argon
+      # 默认主机名
+      WRT_HOST: ZeroWrt
+      # 默认 WiFi 名称
+      WRT_SSID: ZeroWrt
+      # 默认 WiFi 密码
+      WRT_WORD: 12345678
+      # 默认地址
+      WRT_IP: 192.168.10.1
+      # 默认密码，仅供提示，修改无效
+      WRT_PW: 无

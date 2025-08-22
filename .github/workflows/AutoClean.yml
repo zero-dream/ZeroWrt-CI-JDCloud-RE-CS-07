@@ -1,0 +1,26 @@
+name: AutoClean
+
+permissions: write-all
+
+on:
+  # 自动清理: 每天早上 4 点
+  schedule:
+    - cron: 0 20 * * *
+  # 手动清理
+  workflow_dispatch:
+
+jobs:
+  auto_clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete releases and workflows runs
+        uses: ophub/delete-releases-workflows@main
+        with:
+          gh_token: ${{secrets.GITHUB_TOKEN}}
+          delete_tags: true
+          delete_releases: true
+          releases_keep_latest: 3
+          releases_keep_keyword: ''
+          delete_workflows: true
+          workflows_keep_day: 3
+          workflows_keep_keyword: ''

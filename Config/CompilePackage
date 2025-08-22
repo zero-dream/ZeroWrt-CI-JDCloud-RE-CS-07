@@ -1,0 +1,42 @@
+# LuciApp
+
+# 基础软件包
+CONFIG_PACKAGE_luci-app-ttyd=m
+CONFIG_PACKAGE_luci-app-cpufreq=m
+CONFIG_PACKAGE_luci-app-partexp=m
+CONFIG_PACKAGE_luci-app-autoreboot=m
+CONFIG_PACKAGE_luci-app-wolplus=m
+
+# 常用软件包
+CONFIG_PACKAGE_luci-app-samba4=m
+
+# 内网穿透软件包
+CONFIG_PACKAGE_luci-app-zerotier=m
+CONFIG_PACKAGE_luci-app-easytier=m
+
+# 代理软件包
+CONFIG_PACKAGE_luci-app-dae=m
+CONFIG_PACKAGE_luci-app-daed=m
+CONFIG_PACKAGE_luci-app-homeproxy=m
+
+# 其他软件包
+CONFIG_PACKAGE_luci-app-upnp=m
+
+# --------------------------------------------------
+
+# Package
+
+CONFIG_PACKAGE_lrzsz=m
+
+# --------------------------------------------------
+
+# Statistics
+CONFIG_PACKAGE_luci-app-statistics=m
+CONFIG_PACKAGE_collectd=m
+CONFIG_PACKAGE_collectd-mod-cpu=m
+CONFIG_PACKAGE_collectd-mod-interface=m
+CONFIG_PACKAGE_collectd-mod-iwinfo=m
+CONFIG_PACKAGE_collectd-mod-load=m
+CONFIG_PACKAGE_collectd-mod-memory=m
+CONFIG_PACKAGE_collectd-mod-network=m
+CONFIG_PACKAGE_collectd-mod-rrdtool=m
