@@ -6,13 +6,20 @@ CONFIG_PACKAGE_luci-app-cpufreq=m
 CONFIG_PACKAGE_luci-app-partexp=m
 CONFIG_PACKAGE_luci-app-autoreboot=m
 CONFIG_PACKAGE_luci-app-wolplus=m
+CONFIG_PACKAGE_luci-app-mwan3=m
 
 # 常用软件包
 CONFIG_PACKAGE_luci-app-samba4=m
 
 # 内网穿透软件包
+CONFIG_PACKAGE_luci-app-tailscale=m
 CONFIG_PACKAGE_luci-app-zerotier=m
 CONFIG_PACKAGE_luci-app-easytier=m
+CONFIG_PACKAGE_luci-app-frpc=m
+CONFIG_PACKAGE_luci-app-frps=m
+
+# 下载器软件包
+CONFIG_PACKAGE_luci-app-aria2=m
 
 # 代理软件包
 CONFIG_PACKAGE_luci-app-dae=m
@@ -25,7 +32,8 @@ CONFIG_PACKAGE_luci-app-upnp=m
 # --------------------------------------------------
 
 # Package
-
+CONFIG_PACKAGE_tar=m
+CONFIG_PACKAGE_unzip=m
 CONFIG_PACKAGE_lrzsz=m
 
 # --------------------------------------------------
