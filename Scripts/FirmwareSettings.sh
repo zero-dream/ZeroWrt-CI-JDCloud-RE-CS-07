@@ -32,28 +32,28 @@ sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $CFG_FILE
 sed -i "s/hostname='.*'/hostname='$WRT_HOST'/g" $CFG_FILE
 
 # 配置文件修改
-echo "CONFIG_PACKAGE_luci=y" >> ./.config
-echo "CONFIG_LUCI_LANG_zh_Hans=y" >> ./.config
-echo "CONFIG_PACKAGE_luci-theme-$WRT_THEME=y" >> ./.config
-# echo "CONFIG_PACKAGE_luci-app-$WRT_THEME-config=y" >> ./.config
+echo "CONFIG_PACKAGE_luci=y" >> "$WRT_ConfigPath"
+echo "CONFIG_LUCI_LANG_zh_Hans=y" >> "$WRT_ConfigPath"
+echo "CONFIG_PACKAGE_luci-theme-$WRT_THEME=y" >> "$WRT_ConfigPath"
+# echo "CONFIG_PACKAGE_luci-app-$WRT_THEME-config=y" >> "$WRT_ConfigPath"
 
 # 手动调整的插件
 if [ -n "$WRT_PACKAGE" ]; then
-	echo -e "$WRT_PACKAGE" >> ./.config
+	echo -e "$WRT_PACKAGE" >> "$WRT_ConfigPath"
 fi
 
 # 高通平台调整
 DTS_PATH="./target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/"
 if [[ $WRT_TARGET == *"QUALCOMMAX"* ]]; then
 	# 取消 NSS 相关 Feed
-	echo "CONFIG_FEED_nss_packages=n" >> ./.config
-	echo "CONFIG_FEED_sqm_scripts_nss=n" >> ./.config
+	echo "CONFIG_FEED_nss_packages=n" >> "$WRT_ConfigPath"
+	echo "CONFIG_FEED_sqm_scripts_nss=n" >> "$WRT_ConfigPath"
 	# 开启 sqm-nss 插件
-	echo "CONFIG_PACKAGE_luci-app-sqm=y" >> ./.config
-	echo "CONFIG_PACKAGE_sqm-scripts-nss=y" >> ./.config
+	echo "CONFIG_PACKAGE_luci-app-sqm=y" >> "$WRT_ConfigPath"
+	echo "CONFIG_PACKAGE_sqm-scripts-nss=y" >> "$WRT_ConfigPath"
 	# 设置 NSS 版本
-	echo "CONFIG_NSS_FIRMWARE_VERSION_11_4=n" >> ./.config
-	echo "CONFIG_NSS_FIRMWARE_VERSION_12_5=y" >> ./.config
+	echo "CONFIG_NSS_FIRMWARE_VERSION_11_4=n" >> "$WRT_ConfigPath"
+	echo "CONFIG_NSS_FIRMWARE_VERSION_12_5=y" >> "$WRT_ConfigPath"
 	# 无 WIFI 配置调整 Q6 大小
 	if [[ "${WRT_CONFIG,,}" == *"wifi"* && "${WRT_CONFIG,,}" == *"no"* ]]; then
 		find $DTS_PATH -type f ! -iname '*nowifi*' -exec sed -i 's/ipq\(6018\|8074\).dtsi/ipq\1-nowifi.dtsi/g' {} +

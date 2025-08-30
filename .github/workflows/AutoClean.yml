@@ -1,7 +1,10 @@
+# CI 项目
 name: AutoClean
 
+# CI 权限
 permissions: write-all
 
+# CI 计划
 on:
   # 自动清理: 每天早上 4 点
   schedule:
@@ -9,8 +12,10 @@ on:
   # 手动清理
   workflow_dispatch:
 
+# CI 任务
 jobs:
   auto_clean:
+    name: AutoClean
     runs-on: ubuntu-latest
     steps:
       - name: Delete releases and workflows runs

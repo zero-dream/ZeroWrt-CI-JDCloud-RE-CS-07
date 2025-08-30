@@ -1,5 +1,7 @@
+# CI 项目
 name: ZeroWrtCore
 
+# CI 计划
 on:
   workflow_call:
     inputs:
@@ -43,6 +45,7 @@ on:
         required: true
         type: string
 
+# CI 环境
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   WRT_DIR: 'ZeroWrt'
@@ -60,6 +63,7 @@ env:
   WRT_IP: ${{inputs.WRT_IP}}
   WRT_PW: ${{inputs.WRT_PW}}
 
+# CI 任务
 jobs:
   core:
     name: ${{inputs.WRT_SOURCE}}
@@ -105,21 +109,11 @@ jobs:
           echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG | tr '[:lower:]' '[:upper:]')" >> $GITHUB_ENV
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
+          echo "WRT_ConfigPath=$GITHUB_WORKSPACE/$WRT_DIR/.config" >> $GITHUB_ENV
 
-      - name: Initialize Project
+      - name: Initialize ZeroDream Project
         run: |
-          # ZD_UploadReleasePath
-          uploadPath="$GITHUB_WORKSPACE/upload-release"
-          mkdir -p "$uploadPath"
-          echo "ZD_UploadReleasePath=$uploadPath" >> $GITHUB_ENV
-          # ZD_UploadArtifactPath
-          artifactPath="$GITHUB_WORKSPACE/upload-artifact"
-          mkdir -p "$artifactPath"
-          echo "ZD_UploadArtifactPath=$artifactPath" >> $GITHUB_ENV
-          # ZD_TempPath
-          tempPath="$GITHUB_WORKSPACE/temp"
-          mkdir -p "$tempPath"
-          echo "ZD_TempPath=$tempPath" >> $GITHUB_ENV
+          source $GITHUB_WORKSPACE/Scripts/InitZeroDreamProject.sh
 
       - name: Clone Code
         run: |
@@ -181,15 +175,15 @@ jobs:
       - name: Custom Package
         run: |
           cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
-          $GITHUB_WORKSPACE/Scripts/Package.sh
-          $GITHUB_WORKSPACE/Scripts/Handle.sh
+          $GITHUB_WORKSPACE/Scripts/FirmwarePackage.sh
+          $GITHUB_WORKSPACE/Scripts/FirmwareHandle.sh
 
       - name: Custom Setting
         run: |
-          source $GITHUB_WORKSPACE/Scripts/CreateConfig.sh
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          createConfig && cat .config
-          $GITHUB_WORKSPACE/Scripts/Settings.sh
+          source $GITHUB_WORKSPACE/Scripts/FirmwareConfig.sh
+          createConfig && cat "$WRT_ConfigPath"
+          $GITHUB_WORKSPACE/Scripts/FirmwareSettings.sh
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
       - name: Download Package
@@ -220,17 +214,17 @@ jobs:
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
           # UploadArtifact
           if [[ "$WRT_ONLY_CONFIG" == 'true' ]]; then
-            cp -f ./.config "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
+            cp -f "$WRT_ConfigPath" "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
           fi
           if [[ "$WRT_ONLY_CONFIG" == 'false' && "$WRT_MODE" == 'PACKAGE' ]]; then
-            cp -f ./.config "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
+            cp -f "$WRT_ConfigPath" "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
             tar -czvf "$ZD_UploadArtifactPath/$WRT_NAME-OpenwrtBin-$WRT_CONFIG-$WRT_DATE.tar.gz" ./bin/
           fi
           # UploadRelease
           if [[ "$WRT_ONLY_CONFIG" == 'false' && "$WRT_MODE" == 'FIRMWARE' ]]; then
             echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
             echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
-            cp -f ./.config "$ZD_UploadReleasePath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
+            cp -f "$WRT_ConfigPath" "$ZD_UploadReleasePath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
             tar -czvf "$ZD_UploadReleasePath/$WRT_NAME-OpenwrtBin-$WRT_CONFIG-$WRT_DATE.tar.gz" --exclude='*.bin' --exclude='*.ubi' ./bin/
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
             for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do

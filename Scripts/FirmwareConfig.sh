@@ -52,22 +52,20 @@ function getKernelVersion() {
   echo $(sed -n 's/^KERNEL_PATCHVER:=\(.*\)/\1/p' target/linux/qualcommax/Makefile)
 }
 
-# 创建配置
+# 创建配置文件
 function createConfig() {
-  configFile=".config"
-  # 如配置文件已存在
-  cat $GITHUB_WORKSPACE/Config/${WRT_CONFIG} > $configFile
-  cat $GITHUB_WORKSPACE/Config/CompileFirmware >> $configFile
-  cat $GITHUB_WORKSPACE/Config/ZeroWrtKernelModules >> $configFile
+  cat $GITHUB_WORKSPACE/Config/${WRT_CONFIG} > $WRT_ConfigPath
+  cat $GITHUB_WORKSPACE/Config/CompileFirmware >> $WRT_ConfigPath
+  cat $GITHUB_WORKSPACE/Config/ZeroWrtKernelModules >> $WRT_ConfigPath
   if [[ "$WRT_MODE" == 'PACKAGE' ]]; then
-    cat $GITHUB_WORKSPACE/Config/CompilePackage >> $configFile
+    cat $GITHUB_WORKSPACE/Config/CompilePackage >> $WRT_ConfigPath
   fi
   # 添加内存回收补丁
-  addSkbRecycler $configFile
+  addSkbRecycler $WRT_ConfigPath
   # 添加 eBPF
-  addEBPF $configFile
+  addEBPF $WRT_ConfigPath
   # 高通平台添加 NSS 驱动
   if [[ $WRT_TARGET == *"QUALCOMMAX"* ]]; then
-    addNssDriver $configFile
+    addNssDriver $WRT_ConfigPath
   fi
 }

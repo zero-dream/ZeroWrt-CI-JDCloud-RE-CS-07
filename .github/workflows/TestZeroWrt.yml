@@ -1,0 +1,83 @@
+# CI 项目
+name: TestZeroWrt
+
+# CI 权限
+permissions: write-all
+
+# CI 计划
+on:
+  # 手动编译
+  workflow_dispatch:
+    inputs:
+      CONFIG:
+        description: 'CONFIG'
+        required: true
+        type: choice
+        default: 'IPQ60XX-WiFi_NO'
+        options:
+          - IPQ60XX-WiFi_NO
+          - IPQ60XX-WiFi_YES
+          - IPQ807X-WiFi_NO
+          - IPQ807X-WiFi_YES
+      SOURCE:
+        description: 'SOURCE'
+        required: true
+        type: string
+        default: 'VIKINGYFY/immortalwrt'
+      BRANCH:
+        description: 'BRANCH'
+        required: true
+        type: string
+        default: 'main'
+      MODE:
+        description: '模式: FIRMWARE:编译固件; PACKAGE:编译软件包;'
+        required: true
+        type: choice
+        default: 'FIRMWARE'
+        options:
+          - FIRMWARE
+          - PACKAGE
+      ONLY_CONFIG:
+        description: '是否仅生成配置'
+        required: true
+        type: boolean
+        default: false
+      PACKAGE:
+        description: '调整软件包: 使用 \n 分隔'
+        required: false
+        type: string
+        default: ''
+
+# CI 任务
+jobs:
+  config:
+    name: ${{inputs.CONFIG}}
+    # 调用公用编译核心
+    uses: ./.github/workflows/ZeroWrtCore.yml
+    with:
+      # 选择模式
+      WRT_MODE: ${{inputs.MODE}}
+      # 是否仅生成配置
+      WRT_ONLY_CONFIG: ${{inputs.ONLY_CONFIG}}
+      # 插件调整
+      WRT_PACKAGE: ${{inputs.PACKAGE}}
+      # 编译配置
+      WRT_CONFIG: ${{inputs.CONFIG}}
+      # 源码名称
+      WRT_SOURCE: ${{inputs.SOURCE}}
+      # 源码分支
+      WRT_BRANCH: ${{inputs.BRANCH}}
+      # 源码链接
+      WRT_REPO: https://github.com/${{inputs.SOURCE}}.git
+      # 默认主题
+      WRT_THEME: argon
+      # 默认主机名
+      WRT_HOST: ZeroWrt
+      # 默认 WiFi 名称
+      WRT_SSID: ZeroWrt
+      # 默认 WiFi 密码
+      WRT_WORD: 12345678
+      # 默认地址
+      WRT_IP: 192.168.10.1
+      # 默认密码，仅供提示，修改无效
+      WRT_PW: 无
