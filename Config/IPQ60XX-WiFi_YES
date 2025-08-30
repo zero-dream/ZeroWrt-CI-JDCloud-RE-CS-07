@@ -9,9 +9,8 @@ CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_anysafe_e1=y
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_cmiot_ax18=y
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_glinet_gl-ax1800=y
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_glinet_gl-axt1800=y
-CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_jdcloud_re-ss-01=y
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_jdcloud_re-cs-02=y
-CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_jdcloud_re-cs-07=y
+CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_jdcloud_re-ss-01=y
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_link_nn6000-v1=y
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_link_nn6000-v2=y
 CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_linksys_mr7350=y
@@ -45,33 +44,3 @@ CONFIG_IPQ_MEM_PROFILE_512=y
 CONFIG_ATH11K_MEM_PROFILE_1G=n
 CONFIG_ATH11K_MEM_PROFILE_512M=y
 CONFIG_PACKAGE_kmod-qca-nss-crypto=y
-
-# 去除 WIFI
-# CONFIG_DRIVER_11AC_SUPPORT is not set
-# CONFIG_DRIVER_11AX_SUPPORT is not set
-# CONFIG_ATH11K_NSS_SUPPORT is not set
-# CONFIG_NSS_DRV_WIFI_EXT_VDEV_ENABLE is not set
-# CONFIG_PACKAGE_hostapd-common is not set
-# CONFIG_PACKAGE_iw is not set
-# CONFIG_PACKAGE_iwinfo is not set
-# CONFIG_PACKAGE_kmod-ath is not set
-# CONFIG_PACKAGE_kmod-ath11k is not set
-# CONFIG_PACKAGE_kmod-ath11k-ahb is not set
-# CONFIG_PACKAGE_kmod-ath11k-pci is not set
-# CONFIG_PACKAGE_kmod-cfg80211 is not set
-# CONFIG_PACKAGE_kmod-mac80211 is not set
-# CONFIG_PACKAGE_wifi-scripts is not set
-# CONFIG_PACKAGE_wireless-regdb is not set
-# CONFIG_PACKAGE_wpad-openssl is not set
-# CONFIG_PACKAGE_ath11k-firmware-ipq6018 is not set
-# CONFIG_PACKAGE_ath11k-firmware-qcn9074 is not set
-
-# 去除 IPQ-WiFi
-# CONFIG_PACKAGE_ipq-wifi-cmiot_ax18 is not set
-# CONFIG_PACKAGE_ipq-wifi-jdcloud_ax1800-pro is not set
-# CONFIG_PACKAGE_ipq-wifi-jdcloud_ax6600 is not set
-# CONFIG_PACKAGE_ipq-wifi-qihoo_v6 is not set
-# CONFIG_PACKAGE_ipq-wifi-redmi_ax5 is not set
-# CONFIG_PACKAGE_ipq-wifi-redmi_ax5-jdcloud is not set
-# CONFIG_PACKAGE_ipq-wifi-xiaomi_ax1800 is not set
-# CONFIG_PACKAGE_ipq-wifi-zn_m2 is not set
