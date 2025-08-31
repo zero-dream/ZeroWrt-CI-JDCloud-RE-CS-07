@@ -3,36 +3,39 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (C) ImmortalWrt.org
 
+# https://build-scripts.immortalwrt.org/init_build_environment.sh
+
 DEFAULT_COLOR="\033[0m"
 BLUE_COLOR="\033[36m"
 GREEN_COLOR="\033[32m"
 RED_COLOR="\033[31m"
 YELLOW_COLOR="\033[33m"
 
-function __errorMsg() {
+function __error_msg() {
 	echo -e "${RED_COLOR}[ERROR]${DEFAULT_COLOR} $*"
 }
 
-function __infoMsg() {
+function __info_msg() {
 	echo -e "${BLUE_COLOR}[INFO]${DEFAULT_COLOR} $*"
 }
 
-function __successMsg() {
+function __success_msg() {
 	echo -e "${GREEN_COLOR}[SUCCESS]${DEFAULT_COLOR} $*"
 }
 
-function __warningMsg() {
+function __warning_msg() {
 	echo -e "${YELLOW_COLOR}[WARNING]${DEFAULT_COLOR} $*"
 }
 
-function checkSystem() {
-	__infoMsg "Checking system info..."
+function check_system() {
+	__info_msg "Checking system info..."
 
 	VERSION_CODENAME="$(source /etc/os-release; echo "$VERSION_CODENAME")"
 
 	case "$VERSION_CODENAME" in
 	"bionic")
 		GCC_VERSION="9"
+		LLVM_VERSION="18"
 		NODE_DISTRO="$VERSION_CODENAME"
 		NODE_KEY="nodesource.gpg.key"
 		NODE_VERSION="18"
@@ -44,59 +47,74 @@ function checkSystem() {
 		DISTRO_PREFIX="debian-archive/"
 		DISTRO_SECUTIRY_PATH="buster/updates"
 		GCC_VERSION="8"
+		LLVM_VERSION="18"
+		NODE_VERSION="20"
 		UBUNTU_CODENAME="bionic"
 		VERSION_PACKAGE="lib32gcc1 python2"
 		;;
 	"focal"|\
 	"jammy")
 		GCC_VERSION="9"
+		LLVM_VERSION="18"
 		UBUNTU_CODENAME="$VERSION_CODENAME"
 		VERSION_PACKAGE="lib32gcc-s1 python2"
 		;;
 	"bullseye")
 		BPO_FLAG="-t $VERSION_CODENAME-backports"
 		GCC_VERSION="9"
+		LLVM_VERSION="18"
 		UBUNTU_CODENAME="focal"
 		VERSION_PACKAGE="lib32gcc-s1 python2"
 		;;
 	"bookworm")
 		BPO_FLAG="-t $VERSION_CODENAME-backports"
 		GCC_VERSION="12"
+		LLVM_VERSION="18"
 		UBUNTU_CODENAME="jammy"
 		VERSION_PACKAGE="lib32gcc-s1"
 		;;
 	"noble")
-		GCC_VERSION="12"
+		GCC_VERSION="13"
+		LLVM_VERSION="18"
 		UBUNTU_CODENAME="$VERSION_CODENAME"
 		VERSION_PACKAGE="lib32gcc-s1"
 		;;
+	"trixie")
+		BPO_FLAG="-t $VERSION_CODENAME-backports"
+		GCC_VERSION="13"
+		LLVM_VERSION="18"
+		UBUNTU_CODENAME="noble"
+		VERSION_PACKAGE="lib32gcc-s1"
+		;;
 	*)
-		__errorMsg "Unsupported OS, use Ubuntu 20.04 instead."
+		__error_msg "Unsupported OS, use Ubuntu 20.04 instead."
 		exit 1
 		;;
 	esac
 
-	[ "$(uname -m)" == "x86_64" ] || { __errorMsg "Unsupported architecture, use AMD64 instead." && exit 1; }
+	[ "$(uname -m)" == "x86_64" ] || { __error_msg "Unsupported architecture, use AMD64 instead." && exit 1; }
 
-	[ "$(whoami)" == "root" ] || { __errorMsg "You must run this script as root." && exit 1; }
+	[ "$(whoami)" == "root" ] || { __error_msg "You must run this script as root." && exit 1; }
 }
 
-function checkNetwork() {
-	__infoMsg "Checking network..."
+function check_network() {
+	__info_msg "Checking network..."
 
 	curl -s "myip.ipip.net" | grep -qo "中国" && CHN_NET=1
-	curl --connect-timeout 10 "baidu.com" > "/dev/null" 2>&1 || { __warningMsg "Your network is not suitable for compiling OpenWrt!"; }
-	curl --connect-timeout 10 "google.com" > "/dev/null" 2>&1 || { __warningMsg "Your network is not suitable for compiling OpenWrt!"; }
+	curl --connect-timeout 10 "baidu.com" > "/dev/null" 2>&1 || { __warning_msg "Your network is not suitable for compiling OpenWrt!"; }
+	curl --connect-timeout 10 "google.com" > "/dev/null" 2>&1 || { __warning_msg "Your network is not suitable for compiling OpenWrt!"; }
 }
 
-function updateAptSource() {
-	__infoMsg "Updating apt source lists..."
+function update_apt_source() {
+	__info_msg "Updating apt source lists..."
 	set -x
 
 	apt update -y
 	apt install -y apt-transport-https gnupg2
 	if [ -n "$CHN_NET" ]; then
 		mv "/etc/apt/sources.list" "/etc/apt/sources.list.bak"
+		mv "/etc/apt/sources.list.d/debian.sources" "/etc/apt/sources.list.d/debian.sources.bak"
+		mv "/etc/apt/sources.list.d/ubuntu.sources" "/etc/apt/sources.list.d/ubuntu.sources.bak"
 		if [ "$VERSION_CODENAME" == "$UBUNTU_CODENAME" ]; then
 			cat <<-EOF >"/etc/apt/sources.list"
 				deb https://repo.huaweicloud.com/ubuntu/ $VERSION_CODENAME main restricted universe multiverse
@@ -136,7 +154,7 @@ function updateAptSource() {
 	mkdir -p "/etc/apt/trusted.gpg.d"
 
 	cat <<-EOF >"/etc/apt/sources.list.d/nodesource.list"
-		deb https://deb.nodesource.com/node_${NODE_VERSION:-20}.x ${NODE_DISTRO:-nodistro} main
+		deb https://deb.nodesource.com/node_${NODE_VERSION:-22}.x ${NODE_DISTRO:-nodistro} main
 	EOF
 	curl -fsL "https://deb.nodesource.com/gpgkey/${NODE_KEY:-nodesource-repo.gpg.key}" -o "/etc/apt/trusted.gpg.d/nodesource.asc"
 
@@ -159,11 +177,14 @@ function updateAptSource() {
 	EOF
 	curl -fsL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xe1dd270288b4e6030699e45fa1715d88e1df1f24" -o "/etc/apt/trusted.gpg.d/git-core-ubuntu-ppa.asc"
 
-	cat <<-EOF >"/etc/apt/sources.list.d/llvm-toolchain.list"
-		deb https://apt.llvm.org/$VERSION_CODENAME/ llvm-toolchain-$VERSION_CODENAME-19 main
-		deb-src https://apt.llvm.org/$VERSION_CODENAME/ llvm-toolchain-$VERSION_CODENAME-19 main
-	EOF
-	curl -fsL "https://apt.llvm.org/llvm-snapshot.gpg.key" -o "/etc/apt/trusted.gpg.d/llvm-toolchain.asc"
+	# TODO: remove this once llvm-toolchain provides trixie package
+	if [ "$VERSION_CODENAME" != "trixie" ]; then
+		cat <<-EOF >"/etc/apt/sources.list.d/llvm-toolchain.list"
+			deb https://apt.llvm.org/$VERSION_CODENAME/ llvm-toolchain-$VERSION_CODENAME-$LLVM_VERSION main
+			deb-src https://apt.llvm.org/$VERSION_CODENAME/ llvm-toolchain-$VERSION_CODENAME-$LLVM_VERSION main
+		EOF
+		curl -fsL "https://apt.llvm.org/llvm-snapshot.gpg.key" -o "/etc/apt/trusted.gpg.d/llvm-toolchain.asc"
+	fi
 
 	cat <<-EOF >"/etc/apt/sources.list.d/longsleep-ubuntu-golang-backports-$UBUNTU_CODENAME.list"
 		deb https://ppa.launchpadcontent.net/longsleep/golang-backports/ubuntu $UBUNTU_CODENAME main
@@ -181,29 +202,39 @@ function updateAptSource() {
 		sed -i "s,ppa.launchpadcontent.net,launchpad.proxy.ustclug.org,g" "/etc/apt/sources.list.d"/*
 	fi
 
+	# TODO: remove this once git-core and golang PPA update signing key
+	case "$VERSION_CODENAME" in
+	"trixie")
+		cat <<-EOF > "/etc/apt/apt.conf.d/99insecure-signatures"
+			Acquire::AllowInsecureRepositories "true";
+			Acquire::AllowDowngradeToInsecureRepositories "true";
+		EOF
+	;;
+	esac
+
 	apt update -y $BPO_FLAG
 
 	set +x
 }
 
-function installDependencies() {
-	__infoMsg "Installing dependencies..."
+function install_dependencies() {
+	__info_msg "Installing dependencies..."
 	set -x
 
 	apt full-upgrade -y $BPO_FLAG
 	apt install -y $BPO_FLAG ack antlr3 asciidoc autoconf automake autopoint binutils bison \
 		build-essential bzip2 ccache cmake cpio curl device-tree-compiler ecj fakeroot \
-		fastjar flex gawk gettext genisoimage git gnutls-dev gperf haveged help2man \
-		intltool irqbalance jq libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev \
-		libltdl-dev libmpc-dev libmpfr-dev libncurses-dev libreadline-dev libssl-dev \
-		libtool libyaml-dev libz-dev lrzsz msmtp nano ninja-build p7zip p7zip-full patch \
-		pkgconf libpython3-dev python3 python3-pip python3-cryptography python3-docutils \
+		fastjar flex gawk gettext genisoimage gnutls-dev gperf haveged help2man intltool \
+		irqbalance jq libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
+		libmpc-dev libmpfr-dev libncurses-dev libreadline-dev libssl-dev libtool \
+		libyaml-dev libz-dev lrzsz msmtp nano ninja-build p7zip p7zip-full patch pkgconf \
+		libpython3-dev python3 python3-pip python3-cryptography python3-docutils \
 		python3-ply python3-pyelftools python3-requests qemu-utils quilt re2c rsync scons \
 		sharutils squashfs-tools subversion swig texinfo uglifyjs unzip vim wget xmlto \
 		zlib1g-dev zstd xxd $VERSION_PACKAGE
 
-	# Fix: broken http2 support for curl on buster
-	if [ "$VERSION_CODENAME" == "buster"]; then
+	# fix broken http2 support for curl on buster
+	if [ "$VERSION_CODENAME" == "buster" ]; then
 		apt full-upgrade -y
 		apt reinstall -y libcurl3-gnutls/buster
 	fi
@@ -213,6 +244,8 @@ function installDependencies() {
 		pip3 config set install.trusted-host "https://mirrors.aliyun.com"
 	fi
 
+	apt install -y --allow-unauthenticated $BPO_FLAG git
+
 	apt install -y $BPO_FLAG "gcc-$GCC_VERSION" "g++-$GCC_VERSION" "gcc-$GCC_VERSION-multilib" "g++-$GCC_VERSION-multilib"
 	for i in "gcc-$GCC_VERSION" "g++-$GCC_VERSION" "gcc-ar-$GCC_VERSION" "gcc-nm-$GCC_VERSION" "gcc-ranlib-$GCC_VERSION"; do
 		ln -svf "$i" "/usr/bin/${i%-$GCC_VERSION}"
@@ -220,26 +253,22 @@ function installDependencies() {
 	ln -svf "/usr/bin/g++" "/usr/bin/c++"
 	[ -e "/usr/include/asm" ] || ln -svf "/usr/include/$(gcc -dumpmachine)/asm" "/usr/include/asm"
 
-	apt install -y $BPO_FLAG clang-19 libclang-19-dev lld-19 liblld-19-dev
-	for i in "clang-19" "clang++-19" "clang-cpp-19" "ld.lld-19" "ld64.lld-19" "llc-19" "lld-19" "lld-link-19" "opt-19" "wasm-ld-19"; do
-		ln -svf "$i" "/usr/bin/${i%-19}"
+	apt install -y $BPO_FLAG "clang-$LLVM_VERSION" "libclang-$LLVM_VERSION-dev" "lld-$LLVM_VERSION" "liblld-$LLVM_VERSION-dev" "llvm-$LLVM_VERSION"
+	for i in "/usr/lib/llvm-$LLVM_VERSION/bin"/*; do
+		ln -svf "$i" "/usr/bin/${i##*/}"
 	done
+	ln -svf "/usr/lib/llvm-$LLVM_VERSION" "/usr/lib/llvm"
 
-	apt install -y $BPO_FLAG llvm-19
-	for i in "/usr/bin"/llvm-*-19; do
-		ln -svf "$i" "${i%-19}"
-	done
-
-	apt install -y $BPO_FLAG nodejs yarn
+	apt install -y --allow-unauthenticated $BPO_FLAG nodejs yarn
 	if [ -n "$CHN_NET" ]; then
 		npm config set registry "https://registry.npmmirror.com" --global
 		yarn config set registry "https://registry.npmmirror.com" --global
 	fi
 
-	apt install -y $BPO_FLAG golang-1.24-go
+	apt install -y --allow-unauthenticated $BPO_FLAG golang-1.25-go
 	rm -rf "/usr/bin/go" "/usr/bin/gofmt"
-	ln -svf "/usr/lib/go-1.24/bin/go" "/usr/bin/go"
-	ln -svf "/usr/lib/go-1.24/bin/gofmt" "/usr/bin/gofmt"
+	ln -svf "/usr/lib/go-1.25/bin/go" "/usr/bin/go"
+	ln -svf "/usr/lib/go-1.25/bin/gofmt" "/usr/bin/gofmt"
 	if [ -n "$CHN_NET" ]; then
 		go env -w GOPROXY=https://goproxy.cn,direct
 	fi
@@ -251,11 +280,11 @@ function installDependencies() {
 	if TMP_DIR="$(mktemp -d)"; then
 		pushd "$TMP_DIR"
 	else
-		__errorMsg "Failed to create a tmp directory."
+		__error_msg "Failed to create a tmp directory."
 		exit 1
 	fi
 
-	UPX_REV="4.2.4"
+	UPX_REV="5.0.2"
 	curl -fLO "https://github.com/upx/upx/releases/download/v${UPX_REV}/upx-$UPX_REV-amd64_linux.tar.xz"
 	tar -Jxf "upx-$UPX_REV-amd64_linux.tar.xz"
 	rm -rf "/usr/bin/upx" "/usr/bin/upx-ucl"
@@ -263,17 +292,11 @@ function installDependencies() {
 	chmod 0755 "/usr/bin/upx-ucl"
 	ln -svf "/usr/bin/upx-ucl" "/usr/bin/upx"
 
-	git clone --filter=blob:none --no-checkout "https://github.com/openwrt/openwrt.git" "padjffs2"
-	pushd "padjffs2"
-	git config core.sparseCheckout true
-	echo "tools/padjffs2/src" >> ".git/info/sparse-checkout"
-	git checkout
-	cd "tools/padjffs2/src"
-	make
+	curl -fLO "https://raw.githubusercontent.com/openwrt/openwrt/main/tools/padjffs2/src/padjffs2.c"
+	gcc -Wall -Werror -o "padjffs2" "padjffs2.c"
 	strip "padjffs2"
-	rm -rf "/usr/bin/padjffs2"
+	rm -rf "padjffs2.c" "/usr/bin/padjffs2"
 	cp -fp "padjffs2" "/usr/bin/padjffs2"
-	popd
 
 	git clone --filter=blob:none --no-checkout "https://github.com/openwrt/luci.git" "po2lmo"
 	pushd "po2lmo"
@@ -294,14 +317,14 @@ function installDependencies() {
 	rm -rf "$TMP_DIR"
 
 	set +x
-	__successMsg "All dependencies have been installed."
+	__success_msg "All dependencies have been installed."
 }
 
 function main() {
-	checkSystem
-	checkNetwork
-	updateAptSource
-	installDependencies
+	check_system
+	check_network
+	update_apt_source
+	install_dependencies
 }
 
 main

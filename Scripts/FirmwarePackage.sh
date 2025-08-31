@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# --------------------------------------------------
+
+# cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
+
+# --------------------------------------------------
+
 # 安装和更新软件包
 UPDATE_PACKAGE() {
 	local PKG_NAME=$1 # 包名
@@ -42,6 +48,7 @@ UPDATE_PACKAGE() {
 UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
 UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
 UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
+UPDATE_PACKAGE "momo" "nikkinikki-org/OpenWrt-momo" "main"
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 UPDATE_PACKAGE "passwall" "xiaorouji/openwrt-passwall" "main" "pkg"
@@ -96,13 +103,8 @@ UPDATE_VERSION() {
 	done
 }
 
+# 调用示例
+# UPDATE_VERSION "软件包名" "测试版 (可选, 默认:false;)"
+
 UPDATE_VERSION "sing-box"
-
-# --------------------------------------------------
-
-# 更新 Golang 为最新版
-rm -rf ../feeds/packages/lang/golang
-git clone -b 24.x https://github.com/sbwml/packages_lang_golang ../feeds/packages/lang/golang
-
-# Coremark 修复
-sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' ../feeds/packages/utils/coremark/Makefile
+UPDATE_VERSION "tailscale"

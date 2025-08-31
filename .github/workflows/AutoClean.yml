@@ -1,7 +1,10 @@
+# CI 项目
 name: AutoClean
 
+# CI 权限
 permissions: write-all
 
+# CI 计划
 on:
   # 自动清理: 每天早上 4 点
   schedule:
@@ -9,8 +12,10 @@ on:
   # 手动清理
   workflow_dispatch:
 
+# CI 任务
 jobs:
   auto_clean:
+    name: AutoClean
     runs-on: ubuntu-latest
     steps:
       - name: Delete releases and workflows runs
@@ -19,8 +24,8 @@ jobs:
           gh_token: ${{secrets.GITHUB_TOKEN}}
           delete_tags: true
           delete_releases: true
-          releases_keep_latest: 3
-          releases_keep_keyword: 'ZeroWrt-Firmware-IPQ60XX-WiFi_NO-250822121625'
+          releases_keep_latest: 4
+          releases_keep_keyword: '250822/250831'
           delete_workflows: true
-          workflows_keep_day: 3
+          workflows_keep_day: 1
           workflows_keep_keyword: ''
