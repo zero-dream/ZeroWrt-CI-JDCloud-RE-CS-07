@@ -1,4 +1,4 @@
-# ZeroWrt-CI-JDCloud-RE-CS-07
+# ZeroWrt-Firmware-CI
 
 ZeroWrt 固件，由 ZeroDream 基于 VIKINGYFY 的 ImmortalWrt 源码进行开发
 
