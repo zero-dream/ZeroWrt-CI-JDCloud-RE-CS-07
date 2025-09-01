@@ -127,8 +127,9 @@ jobs:
 
       - name: Copy File
         run: |
-          rm -f "$GITHUB_WORKSPACE/Openwrt/.gitkeep"
           cp -r "$GITHUB_WORKSPACE"/Openwrt/* "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cp -r "$GITHUB_WORKSPACE"/Openwrt/.* "$GITHUB_WORKSPACE/$WRT_DIR/"
+          rm -f "$GITHUB_WORKSPACE/$WRT_DIR/.gitkeep"
 
       - name: Check Script
         run: |
@@ -270,4 +271,4 @@ jobs:
         with:
           name: ZeroWrt-Artifact-${{env.WRT_CONFIG}}-${{env.WRT_DATE}}
           path: ${{env.ZD_UploadArtifactPath}}/*.*
-          retention-days: 3 # 保留附件天数，最大值为 90 天
+          retention-days: 1 # 保留附件天数，最大值为 90 天
