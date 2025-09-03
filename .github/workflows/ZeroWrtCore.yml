@@ -121,8 +121,8 @@ jobs:
 
       - name: Initialize Project
         run: |
-          chmod +x "$ZD_LibraryPath/Script/InitProject.sh"
-          source "$ZD_LibraryPath/Script/InitProject.sh"
+          chmod +x "$GITHUB_WORKSPACE/Library/Script/InitProject.sh"
+          source "$GITHUB_WORKSPACE/Library/Script/InitProject.sh"
 
       - name: Clone Code
         run: |
