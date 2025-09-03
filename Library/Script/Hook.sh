@@ -7,6 +7,8 @@ function hook() {
   # Param
   local scriptPath=$1
   # Hook
-  echo "-- Hook: $scriptPath"
-  "$GITHUB_WORKSPACE/Hook/$scriptPath.hook" || exit 0
+  echo '--------------------------------------------------'
+  echo "Hook: $scriptPath"
+  echo $("$GITHUB_WORKSPACE/Hook/$scriptPath.hook" || exit 0)
+  echo '--------------------------------------------------'
 }
