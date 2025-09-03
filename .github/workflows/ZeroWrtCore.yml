@@ -85,7 +85,7 @@ env:
 # CI 任务
 jobs:
   core:
-    name: ${{inputs.WRT_SOURCE}}-Core
+    name: ${{inputs.WRT_SOURCE}}
     runs-on: ubuntu-latest
     steps:
 
@@ -207,11 +207,6 @@ jobs:
           du -h --max-depth=1
           echo "===================="
 
-  upload:
-    needs: core  # 依赖的作业
-    name: ${{inputs.WRT_SOURCE}}-Upload
-    runs-on: ubuntu-latest
-    steps:
       - name: Collect Artifact
         run: |
           # CollectArtifact
