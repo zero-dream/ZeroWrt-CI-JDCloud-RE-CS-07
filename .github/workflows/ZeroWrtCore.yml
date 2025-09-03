@@ -98,7 +98,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo -E apt -yqq update
-          sudo -E apt -yqq install tar
+          sudo -E apt -yqq install tar dos2unix
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
@@ -135,7 +135,7 @@ jobs:
 
       - name: Check Script
         run: |
-          find "$GITHUB_WORKSPACE/" -maxdepth 3 -type f -iregex ".*\(sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+          find "$GITHUB_WORKSPACE/" -maxdepth 3 -type f -iregex ".*\.\(sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
       - name: Check Cache
         id: check-cache
