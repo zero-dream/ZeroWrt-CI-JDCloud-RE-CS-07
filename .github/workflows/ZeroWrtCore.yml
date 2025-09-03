@@ -228,6 +228,7 @@ jobs:
           if [[ "$GH_Repository" != "$ZD_FirmwareRepository" ]]; then
             hook 'ZeroWrtCore/HandleReleaseUpload'
           fi
+          echo "----------------- cascascacas"
           # CollectRelease
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
           if [[ "$WRT_ONLY_CONFIG" == 'false' && "$WRT_MODE" == 'FIRMWARE' ]]; then
