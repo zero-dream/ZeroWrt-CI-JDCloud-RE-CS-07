@@ -135,7 +135,7 @@ jobs:
 
       - name: Check Script
         run: |
-          find "$GITHUB_WORKSPACE/" -maxdepth 3 -type f -iregex ".*\(\.sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+          find "$GITHUB_WORKSPACE/" -maxdepth 3 -type f -iregex ".*\.\(sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
       - name: Check Cache
         id: check-cache

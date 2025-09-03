@@ -7,7 +7,7 @@
 echo "ZD_DATE=$(TZ=UTC-8 date +"%y%m%d%H%M%S")" >> $GITHUB_ENV
 
 # Check Script
-find "$GITHUB_WORKSPACE/" -type f -iregex ".*\(\.sh\|\.hook\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+find "$GITHUB_WORKSPACE/" -type f -iregex ".*\.\(sh\|hook\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
 # --------------------------------------------------
 
