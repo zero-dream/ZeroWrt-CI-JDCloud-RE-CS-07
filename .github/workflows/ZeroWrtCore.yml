@@ -137,6 +137,7 @@ jobs:
 
       - name: Check Cache
         id: check-cache
+        if: env.WRT_ONLY_CONFIG == 'false'
         uses: actions/cache@main
         with:
           key: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_HASH}}
@@ -147,6 +148,7 @@ jobs:
             ${{github.workspace}}/${{env.WRT_DIR}}/staging_dir/tool*
 
       - name: Update Cache
+        if: env.WRT_ONLY_CONFIG == 'false'
         run: |
           if [ -d "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" ]; then
             find "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
@@ -214,7 +216,6 @@ jobs:
           # UploadArtifact
           if [[ "$WRT_ONLY_CONFIG" == 'true' ]]; then
             cp -f "$WRT_ConfigPath" "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
-            tar -czvf "$ZD_UploadArtifactPath/$WRT_NAME-staging_dir-$WRT_CONFIG-$WRT_DATE.tar.gz" ./staging_dir/
           fi
           if [[ "$WRT_ONLY_CONFIG" == 'false' && "$WRT_MODE" == 'PACKAGE' ]]; then
             cp -f "$WRT_ConfigPath" "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"

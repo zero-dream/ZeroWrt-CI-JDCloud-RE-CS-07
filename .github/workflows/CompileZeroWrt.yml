@@ -41,7 +41,7 @@ jobs:
       fail-fast: false
       # 矩阵
       matrix:
-        CONFIG: [IPQ60XX-WiFi_NO]
+        CONFIG: [IPQ60XX-WiFi_NO, IPQ60XX-WiFi_YES, IPQ807X-WiFi_NO, IPQ807X-WiFi_YES]
         SOURCE: [VIKINGYFY/immortalwrt]
         BRANCH: [main]
 
