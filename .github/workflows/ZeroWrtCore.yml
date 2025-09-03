@@ -173,6 +173,15 @@ jobs:
 
       - name: Custom Package
         run: |
+          cd "$GITHUB_WORKSPACE/Script/"
+          echo "-- ls -l"
+          ls -l
+          echo "-- whoami"
+          whoami
+          echo "-- id"
+          id
+          echo "------------------------------------------------"
+
           cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
           $GITHUB_WORKSPACE/Script/FirmwarePackage.sh
           $GITHUB_WORKSPACE/Script/FirmwareHandle.sh
