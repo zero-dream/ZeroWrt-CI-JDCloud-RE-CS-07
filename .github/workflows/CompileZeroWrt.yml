@@ -74,3 +74,9 @@ jobs:
       WRT_IP: 192.168.10.1
       # 默认密码，仅供提示，修改无效
       WRT_PW: 无
+      # --------------------------------------------------
+      # ZeroDream
+      ZD_FirmwareRepository: 'zero-dream/ZeroWrt-Firmware-CI'
+      ZD_PackageRepository: 'zero-dream/ZeroWrt-Package-CI'
+      # ZeroWrt
+      WRT_DIR: 'ZeroWrt'

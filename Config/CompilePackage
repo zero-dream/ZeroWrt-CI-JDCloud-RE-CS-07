@@ -1,9 +1,9 @@
-# Theme
-CONFIG_PACKAGE_luci-app-argon-config=y
-
 # --------------------------------------------------
 
-# LuciApp
+# @ZeroWrt LuciApp Start
+
+# Theme
+CONFIG_PACKAGE_luci-app-argon-config=m
 
 # 基础软件包
 CONFIG_PACKAGE_luci-app-ttyd=m
@@ -34,16 +34,22 @@ CONFIG_PACKAGE_luci-app-homeproxy=m
 # 其他软件包
 CONFIG_PACKAGE_luci-app-upnp=m
 
+# @ZeroWrt LuciApp End
+
 # --------------------------------------------------
 
-# Package
+# @ZeroWrt Package Start
+
 CONFIG_PACKAGE_tar=m
 CONFIG_PACKAGE_unzip=m
 CONFIG_PACKAGE_lrzsz=m
 
+# @ZeroWrt Package End
+
 # --------------------------------------------------
 
-# Statistics
+# @ZeroWrt AppList Start
+
 CONFIG_PACKAGE_luci-app-statistics=m
 CONFIG_PACKAGE_collectd=m
 CONFIG_PACKAGE_collectd-mod-cpu=m
@@ -53,3 +59,8 @@ CONFIG_PACKAGE_collectd-mod-load=m
 CONFIG_PACKAGE_collectd-mod-memory=m
 CONFIG_PACKAGE_collectd-mod-network=m
 CONFIG_PACKAGE_collectd-mod-rrdtool=m
+
+# @ZeroWrt AppList End
+
+# --------------------------------------------------
+  

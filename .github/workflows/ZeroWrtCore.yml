@@ -44,11 +44,30 @@ on:
       WRT_PW:
         required: true
         type: string
+      # --------------------------------------------------
+      # ZeroDream
+      ZD_FirmwareRepository:
+        required: true
+        type: string
+      ZD_PackageRepository:
+        required: true
+        type: string
+      # ZeroWrt
+      WRT_DIR:
+        required: true
+        type: string
 
 # CI 环境
 env:
+  # GITHUB ENV
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  WRT_DIR: 'ZeroWrt'
+  # GH ENV
+  GH_Repository: ${{github.repository}}
+  # ZD ENV
+  ZD_FirmwareRepository: ${{inputs.ZD_FirmwareRepository}}
+  ZD_PackageRepository: ${{inputs.ZD_PackageRepository}}
+  # WRT ENV
+  WRT_DIR: ${{inputs.WRT_DIR}}
   WRT_MODE: ${{inputs.WRT_MODE}}
   WRT_ONLY_CONFIG: ${{inputs.WRT_ONLY_CONFIG}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
@@ -66,7 +85,7 @@ env:
 # CI 任务
 jobs:
   core:
-    name: ${{inputs.WRT_SOURCE}}
+    name: ${{inputs.WRT_SOURCE}}-Core
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space
@@ -96,7 +115,7 @@ jobs:
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix python3-netifaces libfuse-dev tar
-          sudo bash $GITHUB_WORKSPACE/Scripts/InitEnvironment.sh
+          sudo bash $GITHUB_WORKSPACE/Script/InitEnvironment.sh
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
@@ -111,9 +130,10 @@ jobs:
           echo "WRT_LIST=none" >> $GITHUB_ENV
           echo "WRT_ConfigPath=$GITHUB_WORKSPACE/$WRT_DIR/.config" >> $GITHUB_ENV
 
-      - name: Initialize ZeroDream Project
+      - name: Initialize Project
         run: |
-          source $GITHUB_WORKSPACE/Scripts/InitZeroDreamProject.sh
+          chmod +x "$ZD_LibraryPath/Script/InitProject.sh"
+          source "$ZD_LibraryPath/Script/InitProject.sh"
 
       - name: Clone Code
         run: |
@@ -129,11 +149,10 @@ jobs:
         run: |
           cp -r "$GITHUB_WORKSPACE"/Openwrt/* "$GITHUB_WORKSPACE/$WRT_DIR/"
           cp -r "$GITHUB_WORKSPACE"/Openwrt/.* "$GITHUB_WORKSPACE/$WRT_DIR/"
-          rm -f "$GITHUB_WORKSPACE/$WRT_DIR/.gitkeep"
 
       - name: Check Script
         run: |
-          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+          find "$GITHUB_WORKSPACE/" -maxdepth 3 -type f -iregex ".*\(\.sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
       - name: Check Cache
         id: check-cache
@@ -176,15 +195,15 @@ jobs:
       - name: Custom Package
         run: |
           cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
-          $GITHUB_WORKSPACE/Scripts/FirmwarePackage.sh
-          $GITHUB_WORKSPACE/Scripts/FirmwareHandle.sh
+          $GITHUB_WORKSPACE/Script/FirmwarePackage.sh
+          $GITHUB_WORKSPACE/Script/FirmwareHandle.sh
 
       - name: Custom Setting
         run: |
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          source $GITHUB_WORKSPACE/Scripts/FirmwareConfig.sh
+          source $GITHUB_WORKSPACE/Script/FirmwareConfig.sh
           createConfig && cat "$WRT_ConfigPath"
-          $GITHUB_WORKSPACE/Scripts/FirmwareSettings.sh
+          $GITHUB_WORKSPACE/Script/FirmwareSettings.sh
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
       - name: Download Package
@@ -210,43 +229,68 @@ jobs:
           du -h --max-depth=1
           echo "===================="
 
-      - name: Upload File
+  upload:
+    needs: core  # 依赖的作业
+    name: ${{inputs.WRT_SOURCE}}-Upload
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect Artifact
         run: |
+          # CollectArtifact
           cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          # UploadArtifact
           if [[ "$WRT_ONLY_CONFIG" == 'true' ]]; then
-            cp -f "$WRT_ConfigPath" "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
+            cp -f "$WRT_ConfigPath" "$ZD_ArtifactUploadPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
           fi
           if [[ "$WRT_ONLY_CONFIG" == 'false' && "$WRT_MODE" == 'PACKAGE' ]]; then
-            cp -f "$WRT_ConfigPath" "$ZD_UploadArtifactPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
-            tar -czvf "$ZD_UploadArtifactPath/$WRT_NAME-OpenwrtBin-$WRT_CONFIG-$WRT_DATE.tar.gz" ./bin/
+            cp -f "$WRT_ConfigPath" "$ZD_ArtifactUploadPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
+            tar -czvf "$ZD_ArtifactUploadPath/$WRT_NAME-OpenwrtBin-$WRT_CONFIG-$WRT_DATE.tar.gz" ./bin/
           fi
-          # UploadRelease
+
+      - name: Collect Release
+        run: |
+          # Hook
+          source "$ZD_LibraryPath/Script/Hook.sh"
+          if [[ "$GH_Repository" != "$ZD_FirmwareRepository" ]]; then
+            hook 'ZeroWrtCore/HandleReleaseUpload'
+          fi
+          # CollectRelease
+          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
           if [[ "$WRT_ONLY_CONFIG" == 'false' && "$WRT_MODE" == 'FIRMWARE' ]]; then
             echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
             echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
-            cp -f "$WRT_ConfigPath" "$ZD_UploadReleasePath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
-            tar -czvf "$ZD_UploadReleasePath/$WRT_NAME-OpenwrtBin-$WRT_CONFIG-$WRT_DATE.tar.gz" --exclude='*.bin' --exclude='*.ubi' ./bin/
+            cp -f "$WRT_ConfigPath" "$ZD_ReleaseUploadPath/$WRT_NAME-Config-$WRT_CONFIG-$WRT_DATE.txt"
+            tar -czvf "$ZD_ReleaseUploadPath/$WRT_NAME-OpenwrtBin-$WRT_CONFIG-$WRT_DATE.tar.gz" --exclude='*.bin' --exclude='*.ubi' ./bin/
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
             for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
               EXT=$(basename $FILE | cut -d '.' -f 2-)
               NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
               NEW_FILE="$WRT_NAME-$NAME-$WRT_DATE.$EXT"
-              mv -f $FILE "$ZD_UploadReleasePath/$NEW_FILE"
+              mv -f $FILE "$ZD_ReleaseUploadPath/$NEW_FILE"
             done
-            find ./bin/targets/ -type f -exec mv -f {} "$ZD_UploadReleasePath/" \;
+            find ./bin/targets/ -type f -exec mv -f {} "$ZD_ReleaseUploadPath/" \;
           fi
+
+      - name: Make Clean
+        run: |
           # MakeClean
+          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
           if [[ "$WRT_ONLY_CONFIG" == 'false' ]]; then
             make clean -j$(nproc)
           fi
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: ZeroWrt-Artifact-${{env.WRT_CONFIG}}-${{env.WRT_DATE}}
+          path: ${{env.ZD_ArtifactUploadPath}}/*.*
+          retention-days: 1 # 保留附件天数，最大值为 90 天
+
       - name: Upload Release
-        if: env.WRT_ONLY_CONFIG == 'false' && env.WRT_MODE == 'FIRMWARE'
+        if: env.GH_Repository == env.ZD_FirmwareRepository && env.WRT_ONLY_CONFIG == 'false' && env.WRT_MODE == 'FIRMWARE'
         uses: softprops/action-gh-release@master
         with:
           tag_name: ZeroWrt-Firmware-${{env.WRT_CONFIG}}-${{env.WRT_DATE}}
-          files: ${{env.ZD_UploadReleasePath}}/*.*
+          files: ${{env.ZD_ReleaseUploadPath}}/*.*
           body: |
             ZeroWrt 固件，由 ZeroDream 基于 VIKINGYFY 的 ImmortalWrt 源码进行开发
 
@@ -265,10 +309,3 @@ jobs:
 
             内核版本: ${{env.WRT_KVER}}
             插件列表: ${{env.WRT_LIST}}
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@main
-        with:
-          name: ZeroWrt-Artifact-${{env.WRT_CONFIG}}-${{env.WRT_DATE}}
-          path: ${{env.ZD_UploadArtifactPath}}/*.*
-          retention-days: 1 # 保留附件天数，最大值为 90 天
