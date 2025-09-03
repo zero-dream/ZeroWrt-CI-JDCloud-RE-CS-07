@@ -59,6 +59,8 @@ on:
 
 # CI 环境
 env:
+  # ZeroDream ENV
+  ZeroDream_Secret: ${{secrets.ZeroDream_Secret}}
   # GITHUB ENV
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   # GH ENV
