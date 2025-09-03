@@ -9,6 +9,6 @@ function hook() {
   # Hook
   echo '--------------------------------------------------'
   echo "Hook: $scriptPath"
-  echo $("$GITHUB_WORKSPACE/Hook/$scriptPath.hook" || exit 0)
+  "$GITHUB_WORKSPACE/Hook/$scriptPath.hook" || exit 0
   echo '--------------------------------------------------'
 }
