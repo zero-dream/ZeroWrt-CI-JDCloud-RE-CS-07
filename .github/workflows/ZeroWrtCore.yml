@@ -88,18 +88,7 @@ jobs:
     name: ${{inputs.WRT_SOURCE}}-Core
     runs-on: ubuntu-latest
     steps:
-      - name: Free Disk Space
-        uses: endersonmenezes/free-disk-space@v2
-        with:
-          remove_android: true
-          remove_dotnet: true
-          remove_haskell: true
-          remove_tool_cache: true
-          remove_swap: true
-          remove_packages: "azure-cli google-cloud-cli microsoft-edge-stable google-chrome-stable firefox postgresql* temurin-* *llvm* mysql* dotnet-sdk-*"
-          remove_packages_one_command: true
-          remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/local/lib/node_modules /usr/local/share/chromium /usr/local/share/powershell /usr/local/julia /usr/local/aws-cli /usr/local/aws-sam-cli /usr/share/gradle"
-          testing: false
+
 
       - name: Checkout Project
         uses: actions/checkout@main
@@ -186,11 +175,7 @@ jobs:
             echo "caches cleanup done!"
           fi
 
-      - name: Update Feeds
-        run: |
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
+
 
       - name: Custom Package
         run: |
@@ -206,17 +191,7 @@ jobs:
           $GITHUB_WORKSPACE/Script/FirmwareSettings.sh
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
-      - name: Download Package
-        if: env.WRT_ONLY_CONFIG == 'false'
-        run: |
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          make download -j$(nproc)
 
-      - name: Compile Firmware
-        if: env.WRT_ONLY_CONFIG == 'false'
-        run: |
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
-          make -j$(nproc) || make -j1 V=s
 
       - name: Machine Information
         run: |
