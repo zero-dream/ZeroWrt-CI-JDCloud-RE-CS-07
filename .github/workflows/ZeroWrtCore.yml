@@ -137,7 +137,6 @@ jobs:
 
       - name: Check Cache
         id: check-cache
-        if: env.WRT_ONLY_CONFIG == 'false'
         uses: actions/cache@main
         with:
           key: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_HASH}}
@@ -148,7 +147,6 @@ jobs:
             ${{github.workspace}}/${{env.WRT_DIR}}/staging_dir/tool*
 
       - name: Update Cache
-        if: env.WRT_ONLY_CONFIG == 'false'
         run: |
           if [ -d "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" ]; then
             find "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
