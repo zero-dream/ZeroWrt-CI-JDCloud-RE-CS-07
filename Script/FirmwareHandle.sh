@@ -2,7 +2,7 @@
 
 # --------------------------------------------------
 
-# cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
+cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
 
 # --------------------------------------------------
 

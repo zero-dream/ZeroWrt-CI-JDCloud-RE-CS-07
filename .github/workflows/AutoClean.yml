@@ -6,10 +6,12 @@ permissions: write-all
 
 # CI 计划
 on:
-  # 自动清理: 每天早上 4 点
-  schedule:
-    - cron: 0 20 * * *
-  # 手动清理
+  # 自动运行: 当 CompileZeroWrt 完成后
+  workflow_run:
+    workflows: ["CompileZeroWrt"]
+    types:
+      - completed
+  # 手动运行
   workflow_dispatch:
 
 # CI 任务

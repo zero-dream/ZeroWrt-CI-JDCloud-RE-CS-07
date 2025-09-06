@@ -2,7 +2,7 @@
 
 # --------------------------------------------------
 
-# cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+cd "$GITHUB_WORKSPACE/$WRT_DIR/"
 
 # --------------------------------------------------
 
@@ -52,12 +52,12 @@ function getKernelVersion() {
 
 # 创建配置文件
 function createConfig() {
-  cat $GITHUB_WORKSPACE/Config/${WRT_CONFIG} > $WRT_ConfigPath
-  cat $GITHUB_WORKSPACE/Config/CompileFirmware >> $WRT_ConfigPath
-  cat $GITHUB_WORKSPACE/Config/ZeroWrtKernelModules >> $WRT_ConfigPath
-  if [[ "$WRT_MODE" == 'PACKAGE' ]]; then
-    cat $GITHUB_WORKSPACE/Config/CompilePackage >> $WRT_ConfigPath
-  fi
+  cat "$GITHUB_WORKSPACE/Config/$WRT_CONFIG" > $WRT_ConfigPath
+  cat "$GITHUB_WORKSPACE/Config/CompileFirmware" >> $WRT_ConfigPath
+  cat "$GITHUB_WORKSPACE/Config/ZeroWrtKernelModules" >> $WRT_ConfigPath
+  # Hook
+  source "$ZD_ScriptLibPath/Hook.sh"
+  bashHook 'FirmwareConfig/CreateConfig'
   # 修改设备内核大小
   modifyKernelSize
   # 添加内存回收补丁

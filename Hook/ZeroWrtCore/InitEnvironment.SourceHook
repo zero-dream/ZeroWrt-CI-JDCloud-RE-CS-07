@@ -1,0 +1,12 @@
+#!/bin/bash
+# Copyright (C) 2000 ZeroDream
+
+# --------------------------------------------------
+
+# ZeroWrt Environment
+
+echo "WRT_MODE=Firmware" >>$GITHUB_ENV # ??? Firmware|Package
+
+# --------------------------------------------------
+
+return 0

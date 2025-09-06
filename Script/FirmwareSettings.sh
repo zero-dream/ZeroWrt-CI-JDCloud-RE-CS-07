@@ -2,7 +2,7 @@
 
 # --------------------------------------------------
 
-# cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+cd "$GITHUB_WORKSPACE/$WRT_DIR/"
 
 # --------------------------------------------------
 
@@ -11,7 +11,7 @@ sed -i "s/luci-theme-bootstrap/luci-theme-$WRT_THEME/g" $(find ./feeds/luci/coll
 # 修改 immortalwrt.lan 关联 IP
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
 # 添加编译日期标识
-sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ ZeroWrt-$WRT_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
+sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ ZeroWrt-$ZD_DATE')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
 
 WIFI_SH=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null)
 WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"

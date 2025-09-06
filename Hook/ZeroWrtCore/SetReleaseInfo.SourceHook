@@ -1,0 +1,30 @@
+#!/bin/bash
+# Copyright (C) 2000 ZeroDream
+
+# --------------------------------------------------
+
+body=$(cat <<- EOF
+ZeroWrt 固件，由 ZeroDream 基于 VIKINGYFY 的 ImmortalWrt 源码进行开发
+
+源码: ${{env.WRT_REPO}}
+分支: ${{env.WRT_BRANCH}}
+提交: ${{env.WRT_HASH}}
+
+配置: ${{env.WRT_CONFIG}}
+平台: ${{env.WRT_TARGET}}
+
+登录地址: ${{env.WRT_IP}}
+登录密码: ${{env.WRT_PW}}
+
+WIFI名称: ${{env.WRT_SSID}}
+WIFI密码: ${{env.WRT_WORD}}
+
+内核版本: ${{env.WRT_KVER}}
+插件列表: ${{env.WRT_LIST}}
+EOF
+)
+echo "WRT_UploadReleaseBody=$body" >> $GITHUB_ENV
+
+# --------------------------------------------------
+
+return 0

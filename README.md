@@ -12,15 +12,17 @@ ZeroWrt 固件的初始软件包非常精简，内置了大量 Kernel Modules
 
 固件文件名的时间为开始编译的时间，方便核对上游源码提交时间
 
-Openwrt ------ 将数据覆盖到 ZeroWrt 编译目录
+Hook ------ ZeroDream-CI 专用
+
+ZeroDream ------ ZeroDream-CI 私有
+
+Application ------ 应用程序目录
 
 Config ------- 构建 ZeroWrt 的核心配置
 
+Openwrt ------ 将数据覆盖到 ZeroWrt 编译目录
+
 Script ------ 编译 ZeroWrt 的脚本文件夹
-
-Library ------ ZeroDream Library
-
-Hook ------ 在不改变源代码的情况下运行脚本
 
 # 相关参考项目
 
