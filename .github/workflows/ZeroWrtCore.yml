@@ -73,13 +73,13 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo -E apt -yqq purge firefox
-          sudo -E apt -yqq update
-          sudo -E apt -yqq full-upgrade
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix tar
+          sudo -E apt-get -yqq purge firefox
+          sudo -E apt-get -yqq update
+          sudo -E apt-get -yqq full-upgrade
+          sudo -E apt-get -yqq autoremove --purge
+          sudo -E apt-get -yqq autoclean
+          sudo -E apt-get -yqq clean
+          sudo -E apt-get -yqq install dos2unix tar
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
