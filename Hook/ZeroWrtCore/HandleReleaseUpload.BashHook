@@ -7,23 +7,23 @@
 
 # --------------------------------------------------
 
-cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+cd "$WRT_Path/"
 
 cp -f "$WRT_ConfigPath" "$ZD_ReleaseUploadPath/$WRT_NAME-Config-$WRT_CONFIG-$ZD_DATE.txt"
 tar -czvf "$ZD_ReleaseUploadPath/$WRT_NAME-OpenwrtBin-$WRT_CONFIG-$ZD_DATE.tar.gz" \
   --exclude='*.bin' \
   --exclude='*.ubi' \
-  "$GITHUB_WORKSPACE/$WRT_DIR/bin/"
-find "$GITHUB_WORKSPACE/$WRT_DIR/bin/targets/" \
+  "$WRT_Path/bin/"
+find "$WRT_Path/bin/targets/" \
   -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" \
   -exec rm -rf {} +
-for FILE in $(find "$GITHUB_WORKSPACE/$WRT_DIR/bin/targets/" -type f -iname "*$WRT_TARGET*"); do
+for FILE in $(find "$WRT_Path/bin/targets/" -type f -iname "*$WRT_TARGET*"); do
   EXT=$(basename $FILE | cut -d '.' -f 2-)
   NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
   NEW_FILE="$WRT_NAME-$NAME-$ZD_DATE.$EXT"
   mv -f $FILE "$ZD_ReleaseUploadPath/$NEW_FILE"
 done
-find "$GITHUB_WORKSPACE/$WRT_DIR/bin/targets/" -type f \
+find "$WRT_Path/bin/targets/" -type f \
   -exec mv -f {} "$ZD_ReleaseUploadPath/" \;
 
 # --------------------------------------------------

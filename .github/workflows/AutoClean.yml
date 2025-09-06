@@ -20,7 +20,7 @@ jobs:
     name: AutoClean
     runs-on: ubuntu-latest
     steps:
-      - name: Delete releases and workflows runs
+      - name: DeleteReleasesAndWorkflowsRun
         uses: ophub/delete-releases-workflows@main
         with:
           gh_token: ${{secrets.GITHUB_TOKEN}}

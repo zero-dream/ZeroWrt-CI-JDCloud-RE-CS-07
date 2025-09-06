@@ -66,7 +66,7 @@ jobs:
     name: ${{inputs.WRT_SOURCE}}
     runs-on: ubuntu-latest
     steps:
-      - name: Free Disk Space
+      - name: FreeDiskSpace
         uses: endersonmenezes/free-disk-space@v2
         with:
           remove_android: true
@@ -79,10 +79,10 @@ jobs:
           remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/local/lib/node_modules /usr/local/share/chromium /usr/local/share/powershell /usr/local/julia /usr/local/aws-cli /usr/local/aws-sam-cli /usr/share/gradle"
           testing: false
 
-      - name: Checkout Project
+      - name: CheckoutProject
         uses: actions/checkout@main
 
-      - name: Initialize Environment
+      - name: InitCompileEnv
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -97,46 +97,51 @@ jobs:
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
-      - name: Initialize Environment
+      - name: InitZeroDreamCI
         run: |
-          # Environment
+          ZeroDreamCiPath="$RUNNER_TEMP/ZeroDreamCI-$(uuidgen | tr -d '-')"
+          git clone --depth=1 https://github.com/zero-dream/ZeroDream-CI.git "$ZeroDreamCiPath/"
+          chmod +x "$ZeroDreamCiPath/ZeroDream/Main/Init.sh"
+          source "$ZeroDreamCiPath/ZeroDream/Main/Init.sh"
+          # --------------------------------------------------
+          source "$ZD_ScriptLibPath/Hook.sh"
+          sourceHook 'ZeroWrtCore/InitZeroDreamCI'
+
+      - name: InitKeyValueEnv
+        run: |
+          source "$ZD_ScriptLibPath/CreateTempPath.sh"
           echo "WRT_NAME=ZeroWrt" >>$GITHUB_ENV
-          echo "WRT_DIR=$WRT_NAME" >>$GITHUB_ENV
+          echo "WRT_Path=$(createTempPath "$WRT_NAME")" >>$GITHUB_ENV
           echo "WRT_MARK=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)" >>$GITHUB_ENV
           echo "WRT_INFO=${WRT_SOURCE%%/*}" >>$GITHUB_ENV
           echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG | tr '[:lower:]' '[:upper:]')" >>$GITHUB_ENV
           echo "WRT_KVER=none" >>$GITHUB_ENV
           echo "WRT_LIST=none" >>$GITHUB_ENV
-          echo "WRT_ConfigPath=$GITHUB_WORKSPACE/$WRT_DIR/.config" >>$GITHUB_ENV
+          echo "WRT_ConfigPath=$WRT_Path/.config" >>$GITHUB_ENV
           # Hook
           source "$ZD_ScriptLibPath/Hook.sh"
-          sourceHook 'ZeroWrtCore/InitEnvironment'
+          sourceHook 'ZeroWrtCore/InitEnvVar'
 
-      - name: Initialize ZeroDream
+      - name: CloneCode
         run: |
-          chmod +x "$GITHUB_WORKSPACE/Library/Script/InitProject.sh"
-          source "$GITHUB_WORKSPACE/Library/Script/InitProject.sh"
-
-      - name: Clone Code
-        run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO "$GITHUB_WORKSPACE/$WRT_DIR/"
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/" && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >>$GITHUB_ENV
+          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO "$WRT_Path/"
+          cd "$WRT_Path/" && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >>$GITHUB_ENV
           # GitHub Action 移除国内下载源
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
             sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
           fi
 
-      - name: Copy File
+      - name: CopyOpenwrtFile
         run: |
-          cp -r "$GITHUB_WORKSPACE"/Openwrt/* "$GITHUB_WORKSPACE/$WRT_DIR/"
-          cp -r "$GITHUB_WORKSPACE"/Openwrt/.* "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cp -r "$GITHUB_WORKSPACE"/Openwrt/* "$WRT_Path/"
+          cp -r "$GITHUB_WORKSPACE"/Openwrt/.* "$WRT_Path/"
 
-      - name: Check Script
+      - name: CheckScript
         run: |
           find "$GITHUB_WORKSPACE/" -maxdepth 3 -type f -iregex ".*\.\(sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
 
-      - name: Check Cache
+      - name: CheckCache
         id: check-cache
         if: env.WRT_ONLY_CONFIG == 'false'
         uses: actions/cache@main
@@ -144,18 +149,18 @@ jobs:
           key: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_HASH}}
           restore-keys: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}
           path: |
-            ${{github.workspace}}/${{env.WRT_DIR}}/.ccache
-            ${{github.workspace}}/${{env.WRT_DIR}}/staging_dir/host*
-            ${{github.workspace}}/${{env.WRT_DIR}}/staging_dir/tool*
+            ${{github.workspace}}/${{env.WRT_NAME}}/.ccache
+            ${{github.workspace}}/${{env.WRT_NAME}}/staging_dir/host*
+            ${{github.workspace}}/${{env.WRT_NAME}}/staging_dir/tool*
 
-      - name: Update Cache
+      - name: UpdateCache
         if: env.WRT_ONLY_CONFIG == 'false'
         run: |
-          if [ -d "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" ]; then
-            find "$GITHUB_WORKSPACE/$WRT_DIR/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
+          if [ -d "$WRT_Path/staging_dir" ]; then
+            find "$WRT_Path/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
               find "$DIR" -type f -exec touch {} +
             done
-            mkdir -p $GITHUB_WORKSPACE/$WRT_DIR/tmp && echo "1" > $GITHUB_WORKSPACE/$WRT_DIR/tmp/.build
+            mkdir -p "$WRT_Path/tmp" && echo "1" > "$WRT_Path/tmp/.build"
             echo "toolchain skiped done!"
           else
             echo "caches missed!"
@@ -168,39 +173,39 @@ jobs:
             echo "caches cleanup done!"
           fi
 
-      - name: Update Feeds
+      - name: UpdateFeeds
         run: |
-          "$GITHUB_WORKSPACE/$WRT_DIR/scripts/feeds" update -a
-          "$GITHUB_WORKSPACE/$WRT_DIR/scripts/feeds" install -a
+          "$WRT_Path/scripts/feeds" update -a
+          "$WRT_Path/scripts/feeds" install -a
 
-      - name: Custom Package
+      - name: CustomPackage
         run: |
           bash "$GITHUB_WORKSPACE/Script/FirmwarePackage.sh"
           bash "$GITHUB_WORKSPACE/Script/FirmwareHandle.sh"
 
-      - name: Custom Setting
+      - name: CustomSetting
         run: |
           source "$GITHUB_WORKSPACE/Script/FirmwareConfig.sh"
           createConfig && cat "$WRT_ConfigPath"
           bash "$GITHUB_WORKSPACE/Script/FirmwareSettings.sh"
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cd "WRT_Path/"
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
-      - name: Download Package
+      - name: DownloadPackage
         if: env.WRT_ONLY_CONFIG == 'false'
         run: |
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cd "$WRT_Path/"
           make download -j$(nproc)
 
-      - name: Compile ZeroWrt
+      - name: CompileZeroWrt
         if: env.WRT_ONLY_CONFIG == 'false'
         run: |
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cd "$WRT_Path/"
           make -j$(nproc) || make -j1 V=s
 
-      - name: Machine Information
+      - name: MachineInformation
         run: |
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cd "$WRT_Path/"
           echo "===================="
           lscpu | grep -E "name|Core|Thread"
           echo "===================="
@@ -209,7 +214,7 @@ jobs:
           du -h --max-depth=1
           echo "===================="
 
-      - name: Set ZeroWrt Environment
+      - name: SetZeroWrtEnv
         if: env.WRT_ONLY_CONFIG == 'false'
         run: |
           echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >>$GITHUB_ENV
@@ -223,38 +228,38 @@ jobs:
         env:
           ZeroDream_Secret: ${{secrets.ZERODREAM_SECRET}}
 
-      - name: Collect Artifact
+      - name: CollectArtifact
         run: |
           # Hook
           source "$ZD_ScriptLibPath/Hook.sh"
           bashHook 'ZeroWrtCore/HandleArtifactUpload'
           # CollectArtifact
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cd "$WRT_Path/"
           if [[ "$WRT_ONLY_CONFIG" == 'true' ]]; then
             cp -f "$WRT_ConfigPath" "$ZD_ArtifactUploadPath/$WRT_NAME-Config-$WRT_CONFIG-$ZD_DATE.txt"
           fi
 
-      - name: Collect Release
+      - name: CollectRelease
         run: |
           # Hook
           source "$ZD_ScriptLibPath/Hook.sh"
           bashHook 'ZeroWrtCore/HandleReleaseUpload'
           sourceHook 'ZeroWrtCore/SetReleaseInfo'
 
-      - name: Make Clean
+      - name: MakeClean
         if: env.WRT_ONLY_CONFIG == 'false'
         run: |
-          cd "$GITHUB_WORKSPACE/$WRT_DIR/"
+          cd "$WRT_Path/"
           make clean -j$(nproc)
 
-      - name: Upload Artifact
+      - name: UploadArtifact
         uses: actions/upload-artifact@main
         with:
           name: ${{env.WRT_NAME}}-Artifact-${{env.WRT_CONFIG}}-${{env.ZD_DATE}}
           path: ${{env.ZD_ArtifactUploadPath}}/*.*
           retention-days: 1 # 保留附件天数，最大值为 90 天
 
-      - name: Upload Release
+      - name: UploadRelease
         if: env.WRT_ONLY_CONFIG == 'false'
         uses: softprops/action-gh-release@master
         with:

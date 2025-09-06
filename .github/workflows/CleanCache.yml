@@ -22,8 +22,8 @@ jobs:
     name: CleanCache
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Projects
+      - name: CheckoutProject
         uses: actions/checkout@main
 
-      - name: Cache Clean
+      - name: CacheClean
         run: gh cache delete --all

@@ -2,11 +2,11 @@
 
 # --------------------------------------------------
 
-cd "$GITHUB_WORKSPACE/$WRT_DIR/package/"
+cd "$WRT_Path/package/"
 
 # --------------------------------------------------
 
-PKG_PATH="$GITHUB_WORKSPACE/$WRT_DIR/package/"
+PKG_PATH="$WRT_Path/package/"
 
 # 修改 qca-nss-drv 启动顺序
 NSS_DRV="../feeds/nss_packages/qca-nss-drv/files/qca-nss-drv.init"

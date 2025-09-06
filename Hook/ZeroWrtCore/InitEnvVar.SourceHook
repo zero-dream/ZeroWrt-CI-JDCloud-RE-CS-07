@@ -4,7 +4,6 @@
 # --------------------------------------------------
 
 # ZeroWrt Environment
-
 echo "WRT_MODE=Firmware" >>$GITHUB_ENV # ??? Firmware|Package
 
 # --------------------------------------------------
