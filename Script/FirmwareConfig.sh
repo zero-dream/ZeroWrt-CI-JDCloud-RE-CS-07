@@ -57,7 +57,7 @@ function createConfig() {
   cat "$GITHUB_WORKSPACE/Config/ZeroWrtKernelModules" >> $WRT_ConfigPath
   # Hook
   source "$ZD_ScriptLibPath/Hook.sh"
-  bashHook 'FirmwareConfig/CreateConfig'
+  hook 'FirmwareConfig/CreateConfig'
   # 修改设备内核大小
   modifyKernelSize
   # 添加内存回收补丁

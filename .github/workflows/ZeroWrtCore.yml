@@ -91,7 +91,7 @@ jobs:
           source "$ZeroDreamCiPath/ZeroDream/Main/Init.sh"
           # --------------------------------------------------
           source "$ZD_ScriptLibPath/Hook.sh"
-          sourceHook 'ZeroWrtCore/InitZeroDreamCI'
+          hook 'ZeroWrtCore/InitZeroDreamCI'
 
       - name: InitKeyValueEnv
         run: |
@@ -106,7 +106,7 @@ jobs:
           echo "WRT_ConfigPath=$WRT_Path/.config" >>$GITHUB_ENV
           # Hook
           source "$ZD_ScriptLibPath/Hook.sh"
-          sourceHook 'ZeroWrtCore/InitEnvVar'
+          hook 'ZeroWrtCore/InitEnvVar'
 
           cp -a "$GITHUB_WORKSPACE/TestData/" "$WRT_Path/bin"
 
@@ -195,7 +195,7 @@ jobs:
         run: |
           # Hook
           source "$ZD_ScriptLibPath/Hook.sh"
-          bashHook 'ZeroWrtCore/HandleWithSecret'
+          hook 'ZeroWrtCore/HandleWithSecret'
         env:
           ZeroDream_Secret: ${{secrets.ZERODREAM_SECRET}}
 
@@ -203,7 +203,7 @@ jobs:
         run: |
           # Hook
           source "$ZD_ScriptLibPath/Hook.sh"
-          bashHook 'ZeroWrtCore/HandleArtifactUpload'
+          hook 'ZeroWrtCore/HandleArtifactUpload'
           # CollectArtifact
           cd "$WRT_Path/"
           if [[ "$WRT_ONLY_CONFIG" == 'true' ]]; then
@@ -214,8 +214,8 @@ jobs:
         run: |
           # Hook
           source "$ZD_ScriptLibPath/Hook.sh"
-          bashHook 'ZeroWrtCore/HandleReleaseUpload'
-          sourceHook 'ZeroWrtCore/SetReleaseInfo'
+          hook 'ZeroWrtCore/HandleReleaseUpload'
+          hook 'ZeroWrtCore/SetReleaseInfo'
 
       - name: MakeClean
         if: env.WRT_ONLY_CONFIG == 'false'
